@@ -2,12 +2,13 @@ import { useState, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { getPlayers, getTeams } from '../utils/api'
 import { getTeamLogoUrl } from '../utils/teamLogos'
 
-const DraftPicks = forwardRef(function DraftPicks({ picks, onPickChange }, ref) {
+const DraftPicks = forwardRef(function DraftPicks({ picks, onPickChange, teamSelections, onTeamChange }, ref) {
   const [players, setPlayers] = useState([])
   const [teams, setTeams] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerms, setSearchTerms] = useState(Array(32).fill(''))
   const [showDropdown, setShowDropdown] = useState(Array(32).fill(false))
+  const [showTeamDropdown, setShowTeamDropdown] = useState(Array(32).fill(false))
 
   useImperativeHandle(ref, () => ({
     updateSearchTerms: (newTerms) => {
@@ -71,6 +72,33 @@ const DraftPicks = forwardRef(function DraftPicks({ picks, onPickChange }, ref) 
     setSearchTerms(newSearchTerms)
   }
 
+  const toggleTeamDropdown = (index) => {
+    const newShowTeamDropdown = Array(32).fill(false)
+    newShowTeamDropdown[index] = !showTeamDropdown[index]
+    setShowTeamDropdown(newShowTeamDropdown)
+  }
+
+  const selectTeam = (index, teamName) => {
+    if (onTeamChange) {
+      onTeamChange(index, teamName)
+    }
+    const newShowTeamDropdown = [...showTeamDropdown]
+    newShowTeamDropdown[index] = false
+    setShowTeamDropdown(newShowTeamDropdown)
+  }
+
+  const getSelectedTeam = (index) => {
+    if (teamSelections && teamSelections[index]) {
+      return teamSelections[index]
+    }
+    return teams[index]?.name || ''
+  }
+
+  const getSelectedTeamForLogo = (index) => {
+    const selectedName = getSelectedTeam(index)
+    return selectedName || teams[index]?.name || ''
+  }
+
   if (loading) {
     return <div className="text-center py-4 text-gray-400">Loading players and teams...</div>
   }
@@ -90,10 +118,10 @@ const DraftPicks = forwardRef(function DraftPicks({ picks, onPickChange }, ref) 
         {teams.map((team, index) => (
           <div key={index} className="bg-dark-200 rounded-lg p-2 hover:bg-dark-300 transition-colors">
             <div className="flex items-center justify-between mb-1.5">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 relative">
                 <img
-                  src={getTeamLogoUrl(team.name)}
-                  alt={team.name}
+                  src={getTeamLogoUrl(getSelectedTeamForLogo(index))}
+                  alt={getSelectedTeam(index)}
                   className="w-6 h-6 object-contain"
                   onError={(e) => { e.target.style.display = 'none' }}
                 />
@@ -101,8 +129,35 @@ const DraftPicks = forwardRef(function DraftPicks({ picks, onPickChange }, ref) 
                   <div className="text-xs font-semibold text-white">
                     #{index + 1}
                   </div>
-                  <div className="text-xs text-gray-400 truncate max-w-[100px]">{team.name}</div>
+                  <button
+                    type="button"
+                    onClick={() => toggleTeamDropdown(index)}
+                    className={`text-xs truncate max-w-[100px] text-left ${
+                      teamSelections && teamSelections[index] && teamSelections[index] !== team.name
+                        ? 'text-yellow-400 font-medium'
+                        : 'text-gray-400'
+                    } hover:text-white`}
+                    title="Click to change team (if you think there's a trade)"
+                  >
+                    {getSelectedTeam(index)} ▾
+                  </button>
                 </div>
+                {showTeamDropdown[index] && (
+                  <div className="absolute z-30 left-0 top-full mt-1 w-48 bg-dark-100 border border-dark-300 rounded shadow-lg max-h-48 overflow-y-auto">
+                    {teams.map((t) => (
+                      <button
+                        key={t.name}
+                        type="button"
+                        onClick={() => selectTeam(index, t.name)}
+                        className={`w-full text-left px-2 py-1.5 text-xs hover:bg-dark-200 ${
+                          getSelectedTeam(index) === t.name ? 'bg-dark-300 text-accent' : 'text-white'
+                        }`}
+                      >
+                        {t.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               {picks[index] && (
                 <button

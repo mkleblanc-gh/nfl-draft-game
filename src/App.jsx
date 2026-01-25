@@ -9,6 +9,7 @@ import { getGameStatus, getPlayers, getTeams } from './utils/api'
 function App() {
   const [currentView, setCurrentView] = useState('predict') // 'predict', 'leaderboard', 'admin'
   const [picks, setPicks] = useState(Array(32).fill(null))
+  const [teamSelections, setTeamSelections] = useState(Array(32).fill(null)) // Custom team for each pick slot
   const [tradesUp, setTradesUp] = useState(['', '', ''])
   const [tradesDown, setTradesDown] = useState(['', '', ''])
   const [playerName, setPlayerName] = useState('')
@@ -47,6 +48,12 @@ function App() {
       newTrades[index] = team
       setTradesDown(newTrades)
     }
+  }
+
+  const handleTeamChange = (index, teamName) => {
+    const newSelections = [...teamSelections]
+    newSelections[index] = teamName
+    setTeamSelections(newSelections)
   }
 
   const handleAutoFill = async () => {
@@ -155,7 +162,13 @@ function App() {
                 Auto-Fill (Testing)
               </button>
             </div>
-            <DraftPicks ref={draftPicksRef} picks={picks} onPickChange={handlePickChange} />
+            <DraftPicks
+              ref={draftPicksRef}
+              picks={picks}
+              onPickChange={handlePickChange}
+              teamSelections={teamSelections}
+              onTeamChange={handleTeamChange}
+            />
             <TradePredictions
               tradesUp={tradesUp}
               tradesDown={tradesDown}
@@ -165,6 +178,7 @@ function App() {
               playerName={playerName}
               setPlayerName={setPlayerName}
               picks={picks}
+              teamSelections={teamSelections}
               tradesUp={tradesUp}
               tradesDown={tradesDown}
               onSubmitSuccess={checkGameStatus}

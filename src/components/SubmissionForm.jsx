@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { submitPrediction } from '../utils/api'
 
-function SubmissionForm({ playerName, setPlayerName, picks, tradesUp, tradesDown, onSubmitSuccess }) {
+function SubmissionForm({ playerName, setPlayerName, picks, teamSelections, tradesUp, tradesDown, onSubmitSuccess }) {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -39,7 +39,8 @@ function SubmissionForm({ playerName, setPlayerName, picks, tradesUp, tradesDown
           pick: index + 1,
           playerName: player?.name || '',
           position: player?.position || '',
-          college: player?.college || ''
+          college: player?.college || '',
+          predictedTeam: teamSelections?.[index] || null // Include custom team prediction if set
         })),
         tradesUp: tradesUp.filter(t => t !== ''),
         tradesDown: tradesDown.filter(t => t !== ''),

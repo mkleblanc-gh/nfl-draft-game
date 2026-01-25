@@ -15,9 +15,25 @@ function AdminPanel({ onUpdate }) {
   const [searchTerms, setSearchTerms] = useState(Array(32).fill(''))
   const [showDropdown, setShowDropdown] = useState(Array(32).fill(false))
 
-  // Actual trades state
+  // Actual trades state (start with 3, can add more)
   const [actualTradesUp, setActualTradesUp] = useState(['', '', ''])
   const [actualTradesDown, setActualTradesDown] = useState(['', '', ''])
+
+  const addTradeSlot = (type) => {
+    if (type === 'up') {
+      setActualTradesUp([...actualTradesUp, ''])
+    } else {
+      setActualTradesDown([...actualTradesDown, ''])
+    }
+  }
+
+  const removeTradeSlot = (type, index) => {
+    if (type === 'up' && actualTradesUp.length > 1) {
+      setActualTradesUp(actualTradesUp.filter((_, i) => i !== index))
+    } else if (type === 'down' && actualTradesDown.length > 1) {
+      setActualTradesDown(actualTradesDown.filter((_, i) => i !== index))
+    }
+  }
 
   // Settings state
   const [submissionsLocked, setSubmissionsLocked] = useState(false)
@@ -98,6 +114,26 @@ function AdminPanel({ onUpdate }) {
       const newTrades = [...actualTradesDown]
       newTrades[index] = value
       setActualTradesDown(newTrades)
+    }
+  }
+
+  const handleAutoFill = () => {
+    if (teams.length === 0 || players.length === 0) return
+
+    // Auto-fill with first 32 players and default teams
+    const newResults = teams.slice(0, 32).map((team, index) => ({
+      team: team.name,
+      player: players[index]?.name || ''
+    }))
+    setDraftResults(newResults)
+
+    const newSearchTerms = newResults.map(r => r.player)
+    setSearchTerms(newSearchTerms)
+
+    // Set some sample trades
+    if (teams.length >= 10) {
+      setActualTradesUp([teams[5]?.name || '', teams[8]?.name || '', ''])
+      setActualTradesDown([teams[2]?.name || '', teams[4]?.name || '', ''])
     }
   }
 
@@ -256,50 +292,93 @@ function AdminPanel({ onUpdate }) {
       {/* Draft Results Tab */}
       {activeTab === 'results' && (
         <form onSubmit={handleSubmitResults} className="space-y-3">
-          <p className="text-xs text-gray-400 mb-3">
-            Enter the actual draft results below. Scores will be calculated automatically.
-          </p>
+          <div className="flex justify-between items-center mb-3">
+            <p className="text-xs text-gray-400">
+              Enter the actual draft results below. Scores will be calculated automatically.
+            </p>
+            <button
+              type="button"
+              onClick={handleAutoFill}
+              className="px-2 py-1 text-xs bg-yellow-600 hover:bg-yellow-700 text-white rounded"
+            >
+              Auto-Fill (Test)
+            </button>
+          </div>
 
           {/* Actual Trades Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
             <div className="bg-dark-200 rounded-lg p-3">
               <h3 className="text-sm font-semibold text-white mb-2">Teams That Traded Up</h3>
               <div className="space-y-2">
-                {[0, 1, 2].map((index) => (
-                  <select
-                    key={index}
-                    value={actualTradesUp[index]}
-                    onChange={(e) => handleTradeChange('up', index, e.target.value)}
-                    className="w-full px-2 py-1.5 text-xs bg-dark-100 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-accent text-white"
-                  >
-                    <option value="">Team {index + 1}...</option>
-                    {teams.map((team) => (
-                      <option key={team.name} value={team.name}>
-                        {team.name}
-                      </option>
-                    ))}
-                  </select>
+                {actualTradesUp.map((trade, index) => (
+                  <div key={index} className="flex gap-1">
+                    <select
+                      value={trade}
+                      onChange={(e) => handleTradeChange('up', index, e.target.value)}
+                      className="flex-1 px-2 py-1.5 text-xs bg-dark-100 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-accent text-white"
+                    >
+                      <option value="">Team {index + 1}...</option>
+                      {teams.map((team) => (
+                        <option key={team.name} value={team.name}>
+                          {team.name}
+                        </option>
+                      ))}
+                    </select>
+                    {actualTradesUp.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeTradeSlot('up', index)}
+                        className="px-2 text-red-400 hover:text-red-300 text-xs"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
                 ))}
+                <button
+                  type="button"
+                  onClick={() => addTradeSlot('up')}
+                  className="w-full px-2 py-1 text-xs bg-dark-100 border border-dashed border-dark-300 rounded text-gray-400 hover:text-white hover:border-gray-400"
+                >
+                  + Add Team
+                </button>
               </div>
             </div>
             <div className="bg-dark-200 rounded-lg p-3">
               <h3 className="text-sm font-semibold text-white mb-2">Teams That Traded Down</h3>
               <div className="space-y-2">
-                {[0, 1, 2].map((index) => (
-                  <select
-                    key={index}
-                    value={actualTradesDown[index]}
-                    onChange={(e) => handleTradeChange('down', index, e.target.value)}
-                    className="w-full px-2 py-1.5 text-xs bg-dark-100 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-accent text-white"
-                  >
-                    <option value="">Team {index + 1}...</option>
-                    {teams.map((team) => (
-                      <option key={team.name} value={team.name}>
-                        {team.name}
-                      </option>
-                    ))}
-                  </select>
+                {actualTradesDown.map((trade, index) => (
+                  <div key={index} className="flex gap-1">
+                    <select
+                      value={trade}
+                      onChange={(e) => handleTradeChange('down', index, e.target.value)}
+                      className="flex-1 px-2 py-1.5 text-xs bg-dark-100 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-accent text-white"
+                    >
+                      <option value="">Team {index + 1}...</option>
+                      {teams.map((team) => (
+                        <option key={team.name} value={team.name}>
+                          {team.name}
+                        </option>
+                      ))}
+                    </select>
+                    {actualTradesDown.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeTradeSlot('down', index)}
+                        className="px-2 text-red-400 hover:text-red-300 text-xs"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
                 ))}
+                <button
+                  type="button"
+                  onClick={() => addTradeSlot('down')}
+                  className="w-full px-2 py-1 text-xs bg-dark-100 border border-dashed border-dark-300 rounded text-gray-400 hover:text-white hover:border-gray-400"
+                >
+                  + Add Team
+                </button>
               </div>
             </div>
           </div>
