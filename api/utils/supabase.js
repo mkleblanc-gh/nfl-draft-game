@@ -85,7 +85,7 @@ export async function updateSetting(key, value) {
 }
 
 // Draft Results
-export async function saveDraftResults(results) {
+export async function saveDraftResults(results, tradesUp = [], tradesDown = []) {
   // Clear existing results
   await supabase.from('draft_results').delete().neq('id', 0)
 
@@ -96,7 +96,20 @@ export async function saveDraftResults(results) {
     .select()
 
   if (error) throw error
+
+  // Save actual trades that happened
+  await updateSetting('actual_trades_up', JSON.stringify(tradesUp))
+  await updateSetting('actual_trades_down', JSON.stringify(tradesDown))
+
   return data
+}
+
+export async function getActualTrades() {
+  const settings = await getGameSettings()
+  return {
+    tradesUp: settings.actual_trades_up ? JSON.parse(settings.actual_trades_up) : [],
+    tradesDown: settings.actual_trades_down ? JSON.parse(settings.actual_trades_down) : []
+  }
 }
 
 export async function getDraftResults() {

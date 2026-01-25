@@ -31,16 +31,18 @@ export const getGameStatus = async () => {
 }
 
 // Admin endpoints
-export const submitDraftResults = async (password, results) => {
-  const response = await axios.post(`${API_BASE}/admin/results`, {
+export const submitDraftResults = async (password, results, tradesUp = [], tradesDown = []) => {
+  const response = await axios.post(`${API_BASE}/admin-results`, {
     password,
-    results
+    results,
+    tradesUp,
+    tradesDown
   })
   return response.data
 }
 
 export const toggleLock = async (password, locked) => {
-  const response = await axios.post(`${API_BASE}/admin/lock`, {
+  const response = await axios.post(`${API_BASE}/admin-lock`, {
     password,
     locked
   })
@@ -48,7 +50,7 @@ export const toggleLock = async (password, locked) => {
 }
 
 export const calculateScores = async (password) => {
-  const response = await axios.post(`${API_BASE}/admin/calculate-scores`, {
+  const response = await axios.post(`${API_BASE}/admin-calculate-scores`, {
     password
   })
   return response.data

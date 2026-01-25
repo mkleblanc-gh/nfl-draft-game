@@ -10,7 +10,7 @@ export async function handler(event, context) {
   }
 
   try {
-    const { password, results } = JSON.parse(event.body)
+    const { password, results, tradesUp = [], tradesDown = [] } = JSON.parse(event.body)
 
     if (!verifyPassword(password)) {
       return {
@@ -26,7 +26,7 @@ export async function handler(event, context) {
       }
     }
 
-    await saveDraftResults(results)
+    await saveDraftResults(results, tradesUp, tradesDown)
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },

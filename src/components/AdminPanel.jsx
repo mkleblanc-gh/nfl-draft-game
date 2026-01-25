@@ -15,6 +15,10 @@ function AdminPanel({ onUpdate }) {
   const [searchTerms, setSearchTerms] = useState(Array(32).fill(''))
   const [showDropdown, setShowDropdown] = useState(Array(32).fill(false))
 
+  // Actual trades state
+  const [actualTradesUp, setActualTradesUp] = useState(['', '', ''])
+  const [actualTradesDown, setActualTradesDown] = useState(['', '', ''])
+
   // Settings state
   const [submissionsLocked, setSubmissionsLocked] = useState(false)
 
@@ -85,6 +89,18 @@ function AdminPanel({ onUpdate }) {
     ).slice(0, 10)
   }
 
+  const handleTradeChange = (type, index, value) => {
+    if (type === 'up') {
+      const newTrades = [...actualTradesUp]
+      newTrades[index] = value
+      setActualTradesUp(newTrades)
+    } else {
+      const newTrades = [...actualTradesDown]
+      newTrades[index] = value
+      setActualTradesDown(newTrades)
+    }
+  }
+
   const handleSubmitResults = async (e) => {
     e.preventDefault()
     setLoading(true)
@@ -92,13 +108,16 @@ function AdminPanel({ onUpdate }) {
     try {
       const resultsToSubmit = draftResults
         .map((result, index) => ({
-          pick: index + 1,
-          team: result.team,
-          player: result.player
+          pick_number: index + 1,
+          team_name: result.team,
+          player_name: result.player
         }))
-        .filter(r => r.team && r.player)
+        .filter(r => r.team_name && r.player_name)
 
-      await submitDraftResults(password, resultsToSubmit)
+      const tradesUp = actualTradesUp.filter(t => t !== '')
+      const tradesDown = actualTradesDown.filter(t => t !== '')
+
+      await submitDraftResults(password, resultsToSubmit, tradesUp, tradesDown)
       showMessage('success', 'Draft results submitted successfully!')
 
       // Auto-calculate scores after submitting results
@@ -241,6 +260,52 @@ function AdminPanel({ onUpdate }) {
             Enter the actual draft results below. Scores will be calculated automatically.
           </p>
 
+          {/* Actual Trades Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+            <div className="bg-dark-200 rounded-lg p-3">
+              <h3 className="text-sm font-semibold text-white mb-2">Teams That Traded Up</h3>
+              <div className="space-y-2">
+                {[0, 1, 2].map((index) => (
+                  <select
+                    key={index}
+                    value={actualTradesUp[index]}
+                    onChange={(e) => handleTradeChange('up', index, e.target.value)}
+                    className="w-full px-2 py-1.5 text-xs bg-dark-100 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-accent text-white"
+                  >
+                    <option value="">Team {index + 1}...</option>
+                    {teams.map((team) => (
+                      <option key={team.name} value={team.name}>
+                        {team.name}
+                      </option>
+                    ))}
+                  </select>
+                ))}
+              </div>
+            </div>
+            <div className="bg-dark-200 rounded-lg p-3">
+              <h3 className="text-sm font-semibold text-white mb-2">Teams That Traded Down</h3>
+              <div className="space-y-2">
+                {[0, 1, 2].map((index) => (
+                  <select
+                    key={index}
+                    value={actualTradesDown[index]}
+                    onChange={(e) => handleTradeChange('down', index, e.target.value)}
+                    className="w-full px-2 py-1.5 text-xs bg-dark-100 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-accent text-white"
+                  >
+                    <option value="">Team {index + 1}...</option>
+                    {teams.map((team) => (
+                      <option key={team.name} value={team.name}>
+                        {team.name}
+                      </option>
+                    ))}
+                  </select>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Draft Picks */}
+          <h3 className="text-sm font-semibold text-white">Pick Results</h3>
           <div className="max-h-80 overflow-y-auto space-y-2">
             {teams.map((team, index) => (
               <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-2 p-2 bg-dark-200 rounded">
