@@ -38,8 +38,8 @@ export async function saveSubmission(submission) {
     .insert({
       name: submission.name,
       picks: submission.picks,
-      trade_up: submission.tradeUp || [],
-      trade_down: submission.tradeDown || []
+      trade_up: submission.tradesUp || [],
+      trade_down: submission.tradesDown || []
     })
     .select()
 
