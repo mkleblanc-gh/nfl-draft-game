@@ -69,26 +69,26 @@ function SubmissionForm({ playerName, setPlayerName, picks, tradesUp, tradesDown
   const filledPicks = picks.filter(p => p !== null).length
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Submit Your Predictions</h2>
+    <div className="bg-dark-100 rounded-lg shadow-md p-3">
+      <h2 className="text-lg font-bold text-white mb-3">Submit Your Predictions</h2>
 
       {success && (
-        <div className="mb-4 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded">
+        <div className="mb-3 p-3 bg-green-900/50 border-l-4 border-green-500 text-green-200 rounded text-sm">
           <p className="font-bold">Success!</p>
           <p>Your predictions have been submitted. Good luck!</p>
         </div>
       )}
 
       {error && (
-        <div className="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded">
+        <div className="mb-3 p-3 bg-red-900/50 border-l-4 border-red-500 text-red-200 rounded text-sm">
           <p className="font-bold">Error</p>
           <p>{error}</p>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3">
         <div>
-          <label htmlFor="playerName" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="playerName" className="block text-xs font-medium text-gray-300 mb-1">
             Your Name *
           </label>
           <input
@@ -97,17 +97,17 @@ function SubmissionForm({ playerName, setPlayerName, picks, tradesUp, tradesDown
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
             placeholder="Enter your name"
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 text-sm bg-dark-200 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-accent text-white placeholder-gray-500"
             disabled={submitting || success}
           />
         </div>
 
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h3 className="font-semibold text-gray-700 mb-2">Summary</h3>
-          <div className="space-y-1 text-sm text-gray-600">
+        <div className="bg-dark-200 p-3 rounded-lg">
+          <h3 className="font-semibold text-sm text-white mb-2">Summary</h3>
+          <div className="space-y-1 text-xs text-gray-400">
             <div className="flex justify-between">
               <span>Draft picks selected:</span>
-              <span className={filledPicks === 32 ? 'text-green-600 font-semibold' : 'text-red-600'}>
+              <span className={filledPicks === 32 ? 'text-green-400 font-semibold' : 'text-red-400'}>
                 {filledPicks} / 32
               </span>
             </div>
@@ -125,10 +125,10 @@ function SubmissionForm({ playerName, setPlayerName, picks, tradesUp, tradesDown
         <button
           type="submit"
           disabled={submitting || success}
-          className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-colors ${
+          className={`w-full py-2.5 px-4 rounded-lg font-semibold text-sm text-white transition-colors ${
             submitting || success
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-secondary hover:bg-blue-600'
+              ? 'bg-gray-600 cursor-not-allowed'
+              : 'bg-secondary hover:bg-blue-700'
           }`}
         >
           {submitting ? 'Submitting...' : success ? 'Submitted!' : 'Submit Predictions'}

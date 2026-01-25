@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import DraftPicks from './components/DraftPicks'
 import TradePredictions from './components/TradePredictions'
 import SubmissionForm from './components/SubmissionForm'
 import Leaderboard from './components/Leaderboard'
 import AdminPanel from './components/AdminPanel'
-import { getGameStatus } from './utils/api'
+import { getGameStatus, getPlayers, getTeams } from './utils/api'
 
 function App() {
   const [currentView, setCurrentView] = useState('predict') // 'predict', 'leaderboard', 'admin'
@@ -14,6 +14,7 @@ function App() {
   const [playerName, setPlayerName] = useState('')
   const [isLocked, setIsLocked] = useState(false)
   const [loading, setLoading] = useState(true)
+  const draftPicksRef = useRef(null)
 
   useEffect(() => {
     checkGameStatus()
@@ -48,58 +49,84 @@ function App() {
     }
   }
 
+  const handleAutoFill = async () => {
+    try {
+      const [playersData, teamsData] = await Promise.all([
+        getPlayers(),
+        getTeams()
+      ])
+
+      // Shuffle players and pick first 32
+      const shuffled = [...playersData].sort(() => Math.random() - 0.5)
+      const randomPicks = shuffled.slice(0, 32)
+      setPicks(randomPicks)
+
+      // Shuffle teams and pick 6 for trades
+      const shuffledTeams = [...teamsData].sort(() => Math.random() - 0.5)
+      setTradesUp([shuffledTeams[0]?.name || '', shuffledTeams[1]?.name || '', shuffledTeams[2]?.name || ''])
+      setTradesDown([shuffledTeams[3]?.name || '', shuffledTeams[4]?.name || '', shuffledTeams[5]?.name || ''])
+
+      // Update search terms in DraftPicks component
+      if (draftPicksRef.current?.updateSearchTerms) {
+        draftPicksRef.current.updateSearchTerms(randomPicks.map(p => p?.name || ''))
+      }
+    } catch (error) {
+      console.error('Error auto-filling:', error)
+    }
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl text-gray-600">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-primary">
+        <div className="text-xl text-gray-300">Loading...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-primary">
       {/* Header */}
-      <header className="bg-primary text-white shadow-lg">
-        <div className="container mx-auto px-4 py-6">
-          <h1 className="text-3xl md:text-4xl font-bold text-center">
+      <header className="bg-dark-100 text-white shadow-lg border-b border-dark-200">
+        <div className="container mx-auto px-3 py-4">
+          <h1 className="text-2xl md:text-3xl font-bold text-center">
             NFL Draft Game 2026
           </h1>
-          <p className="text-center mt-2 text-blue-200">
+          <p className="text-center mt-1 text-sm text-gray-400">
             Predict all 32 first-round picks and win!
           </p>
         </div>
       </header>
 
       {/* Navigation */}
-      <nav className="bg-white shadow-md sticky top-0 z-10">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-center space-x-1 md:space-x-4 py-3">
+      <nav className="bg-dark-100 shadow-md sticky top-0 z-10 border-b border-dark-200">
+        <div className="container mx-auto px-3">
+          <div className="flex justify-center space-x-1 md:space-x-3 py-2">
             <button
               onClick={() => setCurrentView('predict')}
-              className={`px-3 md:px-6 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-3 md:px-5 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 currentView === 'predict'
                   ? 'bg-secondary text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  : 'text-gray-400 hover:bg-dark-200'
               }`}
             >
               Make Picks
             </button>
             <button
               onClick={() => setCurrentView('leaderboard')}
-              className={`px-3 md:px-6 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-3 md:px-5 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 currentView === 'leaderboard'
                   ? 'bg-secondary text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  : 'text-gray-400 hover:bg-dark-200'
               }`}
             >
               Leaderboard
             </button>
             <button
               onClick={() => setCurrentView('admin')}
-              className={`px-3 md:px-6 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-3 md:px-5 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 currentView === 'admin'
                   ? 'bg-secondary text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  : 'text-gray-400 hover:bg-dark-200'
               }`}
             >
               Admin
@@ -109,17 +136,26 @@ function App() {
       </nav>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-3 py-4">
         {isLocked && currentView === 'predict' && (
-          <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6 rounded">
+          <div className="bg-yellow-900/50 border-l-4 border-yellow-500 text-yellow-200 p-3 mb-4 rounded text-sm">
             <p className="font-bold">Submissions are closed</p>
             <p>The draft has started. Check the leaderboard for results!</p>
           </div>
         )}
 
         {currentView === 'predict' && !isLocked && (
-          <div className="space-y-8">
-            <DraftPicks picks={picks} onPickChange={handlePickChange} />
+          <div className="space-y-4">
+            {/* Auto-fill button for testing */}
+            <div className="flex justify-end">
+              <button
+                onClick={handleAutoFill}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-lg transition-colors"
+              >
+                Auto-Fill (Testing)
+              </button>
+            </div>
+            <DraftPicks ref={draftPicksRef} picks={picks} onPickChange={handlePickChange} />
             <TradePredictions
               tradesUp={tradesUp}
               tradesDown={tradesDown}
@@ -146,11 +182,11 @@ function App() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white mt-12 py-6 border-t">
-        <div className="container mx-auto px-4">
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <h3 className="font-bold text-lg mb-2">Rules:</h3>
-            <ul className="text-sm space-y-1 text-gray-700">
+      <footer className="bg-dark-100 mt-8 py-4 border-t border-dark-200">
+        <div className="container mx-auto px-3">
+          <div className="bg-dark-200 p-3 rounded-lg">
+            <h3 className="font-bold text-sm text-white mb-2">Rules:</h3>
+            <ul className="text-xs space-y-0.5 text-gray-400">
               <li>• One point for each player picked who is drafted in the first round</li>
               <li>• Three points for correct player and pick number</li>
               <li>• Five points for correct player, selection, and team</li>

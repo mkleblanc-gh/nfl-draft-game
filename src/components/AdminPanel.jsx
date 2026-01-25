@@ -166,11 +166,11 @@ function AdminPanel({ onUpdate }) {
 
   if (!isAuthenticated) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6 max-w-md mx-auto">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Admin Login</h2>
+      <div className="bg-dark-100 rounded-lg shadow-md p-4 max-w-md mx-auto">
+        <h2 className="text-lg font-bold text-white mb-4">Admin Login</h2>
         <form onSubmit={handleLogin}>
           <div className="mb-4">
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="password" className="block text-xs font-medium text-gray-300 mb-1">
               Password
             </label>
             <input
@@ -178,14 +178,14 @@ function AdminPanel({ onUpdate }) {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 text-sm bg-dark-200 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-accent text-white placeholder-gray-500"
               placeholder="Enter admin password"
               required
             />
           </div>
           <button
             type="submit"
-            className="w-full py-2 px-4 bg-secondary text-white rounded-lg hover:bg-blue-600"
+            className="w-full py-2 px-4 bg-secondary text-white text-sm rounded-lg hover:bg-blue-700"
           >
             Login
           </button>
@@ -195,15 +195,15 @@ function AdminPanel({ onUpdate }) {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Admin Panel</h2>
+    <div className="bg-dark-100 rounded-lg shadow-md p-3">
+      <h2 className="text-lg font-bold text-white mb-3">Admin Panel</h2>
 
       {message.text && (
         <div
-          className={`mb-4 p-4 rounded-lg border-l-4 ${
+          className={`mb-3 p-3 rounded text-sm border-l-4 ${
             message.type === 'success'
-              ? 'bg-green-100 border-green-500 text-green-700'
-              : 'bg-red-100 border-red-500 text-red-700'
+              ? 'bg-green-900/30 border-green-500 text-green-200'
+              : 'bg-red-900/30 border-red-500 text-red-200'
           }`}
         >
           {message.text}
@@ -211,23 +211,23 @@ function AdminPanel({ onUpdate }) {
       )}
 
       {/* Tabs */}
-      <div className="flex space-x-4 mb-6 border-b">
+      <div className="flex space-x-2 mb-4 border-b border-dark-300">
         <button
           onClick={() => setActiveTab('results')}
-          className={`pb-2 px-4 font-medium transition-colors ${
+          className={`pb-2 px-3 text-sm font-medium transition-colors ${
             activeTab === 'results'
-              ? 'border-b-2 border-blue-500 text-blue-600'
-              : 'text-gray-600 hover:text-gray-800'
+              ? 'border-b-2 border-accent text-accent'
+              : 'text-gray-400 hover:text-gray-300'
           }`}
         >
           Draft Results
         </button>
         <button
           onClick={() => setActiveTab('settings')}
-          className={`pb-2 px-4 font-medium transition-colors ${
+          className={`pb-2 px-3 text-sm font-medium transition-colors ${
             activeTab === 'settings'
-              ? 'border-b-2 border-blue-500 text-blue-600'
-              : 'text-gray-600 hover:text-gray-800'
+              ? 'border-b-2 border-accent text-accent'
+              : 'text-gray-400 hover:text-gray-300'
           }`}
         >
           Settings
@@ -236,19 +236,17 @@ function AdminPanel({ onUpdate }) {
 
       {/* Draft Results Tab */}
       {activeTab === 'results' && (
-        <form onSubmit={handleSubmitResults} className="space-y-4">
-          <div className="mb-4">
-            <p className="text-sm text-gray-600">
-              Enter the actual draft results below. Scores will be calculated automatically.
-            </p>
-          </div>
+        <form onSubmit={handleSubmitResults} className="space-y-3">
+          <p className="text-xs text-gray-400 mb-3">
+            Enter the actual draft results below. Scores will be calculated automatically.
+          </p>
 
-          <div className="max-h-96 overflow-y-auto space-y-3">
+          <div className="max-h-80 overflow-y-auto space-y-2">
             {teams.map((team, index) => (
-              <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 border rounded-lg">
+              <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-2 p-2 bg-dark-200 rounded">
                 <div className="flex items-center">
-                  <span className="font-semibold text-gray-700">
-                    Pick {index + 1}: {team.name}
+                  <span className="text-xs font-semibold text-white">
+                    #{index + 1}: {team.name}
                   </span>
                 </div>
                 <div className="relative">
@@ -257,16 +255,16 @@ function AdminPanel({ onUpdate }) {
                     value={draftResults[index]?.player || searchTerms[index]}
                     onChange={(e) => handleResultChange(index, 'player', e.target.value)}
                     placeholder="Player name"
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2 py-1.5 text-xs bg-dark-100 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-accent text-white placeholder-gray-500"
                   />
                   {showDropdown[index] && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    <div className="absolute z-10 w-full mt-1 bg-dark-100 border border-dark-300 rounded shadow-lg max-h-40 overflow-y-auto">
                       {getFilteredPlayers(searchTerms[index]).map((player) => (
                         <button
                           key={player.name}
                           type="button"
                           onClick={() => selectPlayer(index, player.name)}
-                          className="w-full text-left px-4 py-2 hover:bg-blue-50"
+                          className="w-full text-left px-2 py-1.5 text-xs hover:bg-dark-200 text-white"
                         >
                           {player.name} ({player.position})
                         </button>
@@ -277,7 +275,7 @@ function AdminPanel({ onUpdate }) {
                 <select
                   value={draftResults[index]?.team || ''}
                   onChange={(e) => handleResultChange(index, 'team', e.target.value)}
-                  className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-2 py-1.5 text-xs bg-dark-100 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-accent text-white"
                 >
                   <option value="">Actual team...</option>
                   {teams.map((t) => (
@@ -293,7 +291,7 @@ function AdminPanel({ onUpdate }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 px-6 bg-secondary text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400"
+            className="w-full py-2 px-4 bg-secondary text-white text-sm rounded-lg hover:bg-blue-700 disabled:bg-gray-600"
           >
             {loading ? 'Submitting...' : 'Submit Results & Calculate Scores'}
           </button>
@@ -302,47 +300,47 @@ function AdminPanel({ onUpdate }) {
 
       {/* Settings Tab */}
       {activeTab === 'settings' && (
-        <div className="space-y-6">
-          <div className="p-4 border rounded-lg">
-            <h3 className="font-semibold text-gray-800 mb-3">Submission Lock</h3>
-            <p className="text-sm text-gray-600 mb-4">
+        <div className="space-y-4">
+          <div className="p-3 bg-dark-200 rounded-lg">
+            <h3 className="font-semibold text-sm text-white mb-2">Submission Lock</h3>
+            <p className="text-xs text-gray-400 mb-3">
               Lock submissions to prevent new entries (typically before the draft starts).
             </p>
             <button
               onClick={handleToggleLock}
               disabled={loading}
-              className={`px-6 py-2 rounded-lg font-medium ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium ${
                 submissionsLocked
-                  ? 'bg-green-500 hover:bg-green-600 text-white'
-                  : 'bg-red-500 hover:bg-red-600 text-white'
-              } disabled:bg-gray-400`}
+                  ? 'bg-green-600 hover:bg-green-700 text-white'
+                  : 'bg-red-600 hover:bg-red-700 text-white'
+              } disabled:bg-gray-600`}
             >
               {submissionsLocked ? 'Unlock Submissions' : 'Lock Submissions'}
             </button>
-            <div className="mt-2 text-sm">
-              Status: <span className={submissionsLocked ? 'text-red-600 font-semibold' : 'text-green-600 font-semibold'}>
+            <div className="mt-2 text-xs">
+              Status: <span className={submissionsLocked ? 'text-red-400 font-semibold' : 'text-green-400 font-semibold'}>
                 {submissionsLocked ? 'LOCKED' : 'OPEN'}
               </span>
             </div>
           </div>
 
-          <div className="p-4 border rounded-lg">
-            <h3 className="font-semibold text-gray-800 mb-3">Manual Score Calculation</h3>
-            <p className="text-sm text-gray-600 mb-4">
+          <div className="p-3 bg-dark-200 rounded-lg">
+            <h3 className="font-semibold text-sm text-white mb-2">Manual Score Calculation</h3>
+            <p className="text-xs text-gray-400 mb-3">
               Recalculate all scores based on current draft results.
             </p>
             <button
               onClick={handleCalculateScores}
               disabled={loading}
-              className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium disabled:bg-gray-400"
+              className="px-4 py-2 bg-secondary hover:bg-blue-700 text-white text-sm rounded-lg font-medium disabled:bg-gray-600"
             >
               Calculate Scores
             </button>
           </div>
 
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <h3 className="font-semibold text-gray-800 mb-2">Admin Actions</h3>
-            <ul className="text-sm text-gray-600 space-y-1">
+          <div className="p-3 bg-dark-300 rounded-lg">
+            <h3 className="font-semibold text-sm text-white mb-2">Admin Actions</h3>
+            <ul className="text-xs text-gray-400 space-y-1">
               <li>• Lock submissions before the draft starts</li>
               <li>• Enter draft results as picks are made</li>
               <li>• Scores calculate automatically when results are submitted</li>
