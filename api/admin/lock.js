@@ -1,5 +1,5 @@
 import express from 'express'
-import { updateGameSettings } from '../utils/sheets.js'
+import { updateSetting } from '../utils/supabase.js'
 
 const router = express.Router()
 
@@ -15,7 +15,7 @@ router.post('/', async (req, res) => {
       return res.status(401).json({ error: 'Invalid password' })
     }
 
-    await updateGameSettings('submission_locked', locked ? 'true' : 'false')
+    await updateSetting('submission_locked', locked ? 'true' : 'false')
     res.json({ success: true, message: `Submissions ${locked ? 'locked' : 'unlocked'}` })
   } catch (error) {
     console.error('Error toggling lock:', error)

@@ -1,5 +1,5 @@
 import express from 'express'
-import { getPlayers } from './utils/sheets.js'
+import { getPlayers } from './utils/supabase.js'
 
 const router = express.Router()
 

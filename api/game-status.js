@@ -1,5 +1,5 @@
 import express from 'express'
-import { getGameSettings } from './utils/sheets.js'
+import { getGameSettings } from './utils/supabase.js'
 
 const router = express.Router()
 

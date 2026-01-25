@@ -1,4 +1,4 @@
-import { saveDraftResults } from '../../api/utils/sheets.js'
+import { saveDraftResults } from '../../api/utils/supabase.js'
 
 function verifyPassword(password) {
   return password === process.env.ADMIN_PASSWORD

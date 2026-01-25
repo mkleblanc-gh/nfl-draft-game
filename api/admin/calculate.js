@@ -1,5 +1,5 @@
 import express from 'express'
-import { getSubmissions, getDraftResults, saveScores } from '../utils/sheets.js'
+import { getSubmissions, getDraftResults, saveScores } from '../utils/supabase.js'
 import { calculateScore } from '../utils/scoring.js'
 
 const router = express.Router()

@@ -1,4 +1,4 @@
-import { getSubmissions, getDraftResults, saveScores } from '../../api/utils/sheets.js'
+import { getSubmissions, getDraftResults, saveScores } from '../../api/utils/supabase.js'
 import { calculateScore } from '../../api/utils/scoring.js'
 
 function verifyPassword(password) {

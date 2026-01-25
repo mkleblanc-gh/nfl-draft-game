@@ -1,4 +1,4 @@
-import { updateGameSettings } from '../../api/utils/sheets.js'
+import { updateSetting } from '../../api/utils/supabase.js'
 
 function verifyPassword(password) {
   return password === process.env.ADMIN_PASSWORD
@@ -19,7 +19,7 @@ export async function handler(event, context) {
       }
     }
 
-    await updateGameSettings('submission_locked', locked ? 'true' : 'false')
+    await updateSetting('submission_locked', locked ? 'true' : 'false')
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },

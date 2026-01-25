@@ -1,5 +1,5 @@
 import express from 'express'
-import { saveDraftResults } from '../utils/sheets.js'
+import { saveDraftResults } from '../utils/supabase.js'
 
 const router = express.Router()
 

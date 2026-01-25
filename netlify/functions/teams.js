@@ -1,4 +1,4 @@
-import { getTeams } from '../../api/utils/sheets.js'
+import { getTeams } from '../../api/utils/supabase.js'
 
 export async function handler(event, context) {
   if (event.httpMethod !== 'GET') {

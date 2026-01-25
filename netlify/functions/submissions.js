@@ -1,4 +1,4 @@
-import { saveSubmission, getGameSettings } from '../../api/utils/sheets.js'
+import { saveSubmission, getGameSettings } from '../../api/utils/supabase.js'
 
 export async function handler(event, context) {
   if (event.httpMethod !== 'POST') {

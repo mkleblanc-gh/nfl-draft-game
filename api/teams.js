@@ -1,5 +1,5 @@
 import express from 'express'
-import { getTeams } from './utils/sheets.js'
+import { getTeams } from './utils/supabase.js'
 
 const router = express.Router()
 

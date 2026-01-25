@@ -1,5 +1,5 @@
 import express from 'express'
-import { getScores } from './utils/sheets.js'
+import { getScores } from './utils/supabase.js'
 
 const router = express.Router()
 
