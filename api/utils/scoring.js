@@ -47,8 +47,8 @@ export function calculateScore(submission, draftResults, tradeData = { teamsUp: 
     const actualPlayer = actualResult.player
     const actualTeam = actualResult.team
 
-    // Get the team for this pick from the default draft order
-    const predictedTeam = getTeamForPick(pickNumber).toLowerCase()
+    // Get predicted team: use user's selection if set, otherwise default team for this pick
+    const predictedTeam = (pick.predictedTeam || getTeamForPick(pickNumber)).toLowerCase()
 
     // Check matches (no stacking - highest points only)
     if (actualPlayer === predictedPlayerLower && actualTeam === predictedTeam) {
