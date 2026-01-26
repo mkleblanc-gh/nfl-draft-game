@@ -1,18 +1,14 @@
 import { createClient } from '@supabase/supabase-js'
-import dotenv from 'dotenv'
-import path from 'path'
-import { fileURLToPath } from 'url'
 
-// Load .env from parent directory (for local development)
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-dotenv.config({ path: path.join(__dirname, '..', '..', '.env') })
+// Environment variables are set by:
+// - Netlify: configured in dashboard
+// - Local dev: loaded by api/server.js before importing this file
 
 const supabaseUrl = process.env.SUPABASE_URL
 const supabaseKey = process.env.SUPABASE_ANON_KEY
 
 if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Missing Supabase environment variables')
+  throw new Error('Missing Supabase environment variables - check Netlify env vars or local .env')
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey)
