@@ -4,7 +4,7 @@ import { submitDraftResults, toggleLock, calculateScores, getTeams, getPlayers }
 function AdminPanel({ onUpdate }) {
   const [password, setPassword] = useState('')
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [activeTab, setActiveTab] = useState('results') // 'results', 'settings'
+  const [activeTab, setActiveTab] = useState('live') // 'live', 'results', 'settings'
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
 
@@ -37,6 +37,13 @@ function AdminPanel({ onUpdate }) {
 
   // Settings state
   const [submissionsLocked, setSubmissionsLocked] = useState(false)
+
+  // Live mode quick entry state
+  const [quickPickNumber, setQuickPickNumber] = useState(1)
+  const [quickPlayer, setQuickPlayer] = useState('')
+  const [quickTeam, setQuickTeam] = useState('')
+  const [quickPlayerSearch, setQuickPlayerSearch] = useState('')
+  const [showQuickDropdown, setShowQuickDropdown] = useState(false)
 
   useEffect(() => {
     fetchData()
@@ -219,6 +226,80 @@ function AdminPanel({ onUpdate }) {
     }
   }
 
+  // Quick pick entry for live mode
+  const handleQuickPickSubmit = async () => {
+    if (!quickPlayer || !quickTeam) {
+      showMessage('error', 'Please select both a player and team')
+      return
+    }
+
+    setLoading(true)
+    try {
+      // Update the draft results array with the new pick
+      const newResults = [...draftResults]
+      newResults[quickPickNumber - 1] = { team: quickTeam, player: quickPlayer }
+      setDraftResults(newResults)
+
+      // Update search terms too
+      const newSearchTerms = [...searchTerms]
+      newSearchTerms[quickPickNumber - 1] = quickPlayer
+      setSearchTerms(newSearchTerms)
+
+      // Submit all results (including partial)
+      const resultsToSubmit = newResults
+        .map((result, index) => ({
+          pick_number: index + 1,
+          team_name: result.team,
+          player_name: result.player
+        }))
+        .filter(r => r.team_name && r.player_name)
+
+      const tradesUp = actualTradesUp.filter(t => t !== '')
+      const tradesDown = actualTradesDown.filter(t => t !== '')
+
+      await submitDraftResults(password, resultsToSubmit, tradesUp, tradesDown)
+
+      // Auto-calculate scores
+      await calculateScores(password)
+
+      showMessage('success', `Pick #${quickPickNumber} saved! Scores updated.`)
+      if (onUpdate) onUpdate()
+
+      // Auto-advance to next pick
+      if (quickPickNumber < 32) {
+        setQuickPickNumber(quickPickNumber + 1)
+        setQuickPlayer('')
+        setQuickTeam(teams[quickPickNumber]?.name || '') // Default to next team
+        setQuickPlayerSearch('')
+      }
+    } catch (err) {
+      console.error('Error submitting quick pick:', err)
+      showMessage('error', 'Failed to save pick')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const selectQuickPlayer = (playerName) => {
+    setQuickPlayer(playerName)
+    setQuickPlayerSearch(playerName)
+    setShowQuickDropdown(false)
+  }
+
+  const getNextPickNumber = () => {
+    // Find first empty pick
+    for (let i = 0; i < 32; i++) {
+      if (!draftResults[i]?.player || !draftResults[i]?.team) {
+        return i + 1
+      }
+    }
+    return 32
+  }
+
+  const getFilledPickCount = () => {
+    return draftResults.filter(r => r?.player && r?.team).length
+  }
+
   if (!isAuthenticated) {
     return (
       <div className="bg-dark-100 rounded-lg shadow-md p-4 max-w-md mx-auto">
@@ -268,6 +349,16 @@ function AdminPanel({ onUpdate }) {
       {/* Tabs */}
       <div className="flex space-x-2 mb-4 border-b border-dark-300">
         <button
+          onClick={() => setActiveTab('live')}
+          className={`pb-2 px-3 text-sm font-medium transition-colors ${
+            activeTab === 'live'
+              ? 'border-b-2 border-green-500 text-green-400'
+              : 'text-gray-400 hover:text-gray-300'
+          }`}
+        >
+          🔴 Live Mode
+        </button>
+        <button
           onClick={() => setActiveTab('results')}
           className={`pb-2 px-3 text-sm font-medium transition-colors ${
             activeTab === 'results'
@@ -275,7 +366,7 @@ function AdminPanel({ onUpdate }) {
               : 'text-gray-400 hover:text-gray-300'
           }`}
         >
-          Draft Results
+          All Results
         </button>
         <button
           onClick={() => setActiveTab('settings')}
@@ -288,6 +379,163 @@ function AdminPanel({ onUpdate }) {
           Settings
         </button>
       </div>
+
+      {/* Live Mode Tab */}
+      {activeTab === 'live' && (
+        <div className="space-y-4">
+          <div className="bg-green-900/30 border border-green-500 rounded-lg p-4">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-lg font-bold text-green-400">Quick Pick Entry</h3>
+              <div className="text-sm text-gray-300">
+                {getFilledPickCount()} / 32 picks entered
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              {/* Pick Number */}
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Pick #</label>
+                <select
+                  value={quickPickNumber}
+                  onChange={(e) => {
+                    const num = parseInt(e.target.value)
+                    setQuickPickNumber(num)
+                    setQuickTeam(teams[num - 1]?.name || '')
+                  }}
+                  className="w-full px-3 py-2 text-sm bg-dark-100 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500 text-white"
+                >
+                  {Array.from({ length: 32 }, (_, i) => (
+                    <option key={i + 1} value={i + 1}>
+                      #{i + 1} {draftResults[i]?.player ? '✓' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Player Search */}
+              <div className="relative">
+                <label className="block text-xs text-gray-400 mb-1">Player</label>
+                <input
+                  type="text"
+                  value={quickPlayerSearch}
+                  onChange={(e) => {
+                    setQuickPlayerSearch(e.target.value)
+                    setShowQuickDropdown(e.target.value.length > 0)
+                  }}
+                  placeholder="Search player..."
+                  className="w-full px-3 py-2 text-sm bg-dark-100 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500 text-white placeholder-gray-500"
+                />
+                {showQuickDropdown && (
+                  <div className="absolute z-20 w-full mt-1 bg-dark-100 border border-dark-300 rounded shadow-lg max-h-48 overflow-y-auto">
+                    {getFilteredPlayers(quickPlayerSearch).map((player) => (
+                      <button
+                        key={player.name}
+                        type="button"
+                        onClick={() => selectQuickPlayer(player.name)}
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-dark-200 text-white"
+                      >
+                        {player.name} <span className="text-gray-400">({player.position})</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Team */}
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Team</label>
+                <select
+                  value={quickTeam}
+                  onChange={(e) => setQuickTeam(e.target.value)}
+                  className="w-full px-3 py-2 text-sm bg-dark-100 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500 text-white"
+                >
+                  <option value="">Select team...</option>
+                  {teams.map((team) => (
+                    <option key={team.name} value={team.name}>
+                      {team.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Submit Button */}
+              <div className="flex items-end">
+                <button
+                  type="button"
+                  onClick={handleQuickPickSubmit}
+                  disabled={loading || !quickPlayer || !quickTeam}
+                  className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white text-sm font-semibold rounded transition-colors"
+                >
+                  {loading ? 'Saving...' : 'Add Pick & Update Scores'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Picks Display */}
+          <div className="bg-dark-200 rounded-lg p-3">
+            <h4 className="text-sm font-semibold text-white mb-2">Entered Picks</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 max-h-60 overflow-y-auto">
+              {draftResults.map((result, index) => (
+                <div
+                  key={index}
+                  className={`p-2 rounded text-xs ${
+                    result?.player && result?.team
+                      ? 'bg-green-900/30 border border-green-700'
+                      : 'bg-dark-300 border border-dark-400'
+                  }`}
+                >
+                  <div className="font-semibold text-white">#{index + 1}</div>
+                  {result?.player ? (
+                    <>
+                      <div className="text-green-400 truncate">{result.player}</div>
+                      <div className="text-gray-400 truncate">{result.team}</div>
+                    </>
+                  ) : (
+                    <div className="text-gray-500">—</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Trades Section (compact) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="bg-dark-200 rounded-lg p-3">
+              <h4 className="text-xs font-semibold text-white mb-2">Teams Traded Up</h4>
+              <div className="flex flex-wrap gap-1">
+                {actualTradesUp.filter(t => t).map((team, i) => (
+                  <span key={i} className="px-2 py-1 bg-blue-900/50 text-blue-300 text-xs rounded">
+                    {team}
+                  </span>
+                ))}
+                <button
+                  onClick={() => setActiveTab('results')}
+                  className="px-2 py-1 text-xs text-gray-400 hover:text-white"
+                >
+                  + Edit
+                </button>
+              </div>
+            </div>
+            <div className="bg-dark-200 rounded-lg p-3">
+              <h4 className="text-xs font-semibold text-white mb-2">Teams Traded Down</h4>
+              <div className="flex flex-wrap gap-1">
+                {actualTradesDown.filter(t => t).map((team, i) => (
+                  <span key={i} className="px-2 py-1 bg-orange-900/50 text-orange-300 text-xs rounded">
+                    {team}
+                  </span>
+                ))}
+                <button
+                  onClick={() => setActiveTab('results')}
+                  className="px-2 py-1 text-xs text-gray-400 hover:text-white"
+                >
+                  + Edit
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Draft Results Tab */}
       {activeTab === 'results' && (

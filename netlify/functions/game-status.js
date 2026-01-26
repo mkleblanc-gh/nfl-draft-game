@@ -1,4 +1,4 @@
-import { getGameSettings } from '../../api/utils/supabase.js'
+import { getGameSettings, getDraftResults } from '../../api/utils/supabase.js'
 
 export async function handler(event, context) {
   if (event.httpMethod !== 'GET') {
@@ -6,13 +6,19 @@ export async function handler(event, context) {
   }
 
   try {
-    const settings = await getGameSettings()
+    const [settings, draftResults] = await Promise.all([
+      getGameSettings(),
+      getDraftResults()
+    ])
+
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         locked: settings.submission_locked === 'true',
-        deadline: settings.deadline || null
+        deadline: settings.deadline || null,
+        picksEntered: draftResults.length,
+        totalPicks: 32
       })
     }
   } catch (error) {
