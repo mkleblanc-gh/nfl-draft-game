@@ -1,27 +1,60 @@
-import { useState, useEffect } from 'react'
-import { getLeaderboard } from '../utils/api'
+import { useState, useEffect, useRef } from 'react'
+import { getLeaderboard, getGameStatus } from '../utils/api'
 
 function Leaderboard() {
   const [scores, setScores] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [picksEntered, setPicksEntered] = useState(0)
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [autoRefresh, setAutoRefresh] = useState(true)
+  const intervalRef = useRef(null)
 
   useEffect(() => {
-    fetchLeaderboard()
-  }, [])
+    fetchAll()
 
-  const fetchLeaderboard = async () => {
+    // Set up auto-refresh interval (every 30 seconds)
+    if (autoRefresh) {
+      intervalRef.current = setInterval(() => {
+        fetchAll(true) // silent refresh (no loading spinner)
+      }, 30000)
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+      }
+    }
+  }, [autoRefresh])
+
+  const fetchAll = async (silent = false) => {
     try {
-      setLoading(true)
-      const data = await getLeaderboard()
-      setScores(data)
+      if (!silent) setLoading(true)
+
+      const [leaderboardData, statusData] = await Promise.all([
+        getLeaderboard(),
+        getGameStatus()
+      ])
+
+      setScores(leaderboardData)
+      setPicksEntered(statusData.picksEntered || 0)
+      setLastUpdated(new Date())
       setError('')
     } catch (err) {
-      console.error('Error fetching leaderboard:', err)
-      setError('Failed to load leaderboard. Please try again.')
+      console.error('Error fetching data:', err)
+      if (!silent) setError('Failed to load leaderboard. Please try again.')
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
+  }
+
+  const fetchLeaderboard = async () => {
+    fetchAll()
+  }
+
+  const formatLastUpdated = () => {
+    if (!lastUpdated) return ''
+    return lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   }
 
   if (loading) {
@@ -59,14 +92,43 @@ function Leaderboard() {
 
   return (
     <div className="bg-dark-100 rounded-lg shadow-md p-3">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-bold text-white">Leaderboard</h2>
-        <button
-          onClick={fetchLeaderboard}
-          className="px-3 py-1.5 text-xs bg-dark-200 hover:bg-dark-300 text-gray-300 rounded-lg transition-colors"
-        >
-          Refresh
-        </button>
+      <div className="flex flex-col gap-2 mb-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-bold text-white">Leaderboard</h2>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={fetchLeaderboard}
+              className="px-3 py-1.5 text-xs bg-dark-200 hover:bg-dark-300 text-gray-300 rounded-lg transition-colors"
+            >
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        {/* Pick count and auto-refresh status */}
+        <div className="flex justify-between items-center text-xs">
+          <div className="flex items-center gap-3">
+            <span className="text-gray-400">
+              Picks: <span className={`font-semibold ${picksEntered === 32 ? 'text-green-400' : 'text-accent'}`}>
+                {picksEntered}/32
+              </span>
+            </span>
+            {lastUpdated && (
+              <span className="text-gray-500">
+                Updated {formatLastUpdated()}
+              </span>
+            )}
+          </div>
+          <label className="flex items-center gap-1.5 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={autoRefresh}
+              onChange={(e) => setAutoRefresh(e.target.checked)}
+              className="w-3 h-3 rounded"
+            />
+            <span className="text-gray-400">Auto-refresh</span>
+          </label>
+        </div>
       </div>
 
       {!hasScores && (
