@@ -1,4 +1,4 @@
-import { getSubmissions, getDraftResults, saveScores } from '../../api/utils/supabase.js'
+import { getSubmissions, getDraftResults, saveScores, getActualTrades } from '../../api/utils/supabase.js'
 import { calculateScore } from '../../api/utils/scoring.js'
 
 function verifyPassword(password) {
@@ -20,9 +20,12 @@ export async function handler(event, context) {
       }
     }
 
-    // Get submissions and draft results
-    const submissions = await getSubmissions()
-    const draftResults = await getDraftResults()
+    // Get submissions, draft results, and actual trades
+    const [submissions, draftResults, actualTrades] = await Promise.all([
+      getSubmissions(),
+      getDraftResults(),
+      getActualTrades()
+    ])
 
     if (draftResults.length === 0) {
       return {
@@ -34,8 +37,8 @@ export async function handler(event, context) {
     // Calculate scores for each submission
     const scores = submissions.map(submission => {
       return calculateScore(submission, draftResults, {
-        teamsUp: [],
-        teamsDown: []
+        teamsUp: actualTrades.tradesUp || [],
+        teamsDown: actualTrades.tradesDown || []
       })
     })
 
