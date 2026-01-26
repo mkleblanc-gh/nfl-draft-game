@@ -132,14 +132,15 @@ const DraftPicks = forwardRef(function DraftPicks({ picks, onPickChange, teamSel
                   <button
                     type="button"
                     onClick={() => toggleTeamDropdown(index)}
-                    className={`text-xs truncate max-w-[100px] text-left ${
+                    className={`flex items-center gap-0.5 text-xs max-w-[100px] text-left ${
                       teamSelections && teamSelections[index] && teamSelections[index] !== team.name
                         ? 'text-yellow-400 font-medium'
                         : 'text-gray-400'
                     } hover:text-white`}
                     title="Click to change team (if you think there's a trade)"
                   >
-                    {getSelectedTeam(index)} ▾
+                    <span className="truncate">{getSelectedTeam(index)}</span>
+                    <span className="flex-shrink-0">▾</span>
                   </button>
                 </div>
                 {showTeamDropdown[index] && (
