@@ -1,15 +1,24 @@
 import { useState } from 'react'
 import { submitPrediction } from '../utils/api'
 
-function SubmissionForm({ playerName, setPlayerName, picks, teamSelections, tradesUp, tradesDown, onSubmitSuccess }) {
+function SubmissionForm({ playerName, setPlayerName, playerEmail, setPlayerEmail, picks, teamSelections, tradesUp, tradesDown, onSubmitSuccess }) {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
   const validateSubmission = () => {
-    if (!playerName.trim()) {
-      return 'Please enter your name'
+    // Email is required
+    if (!playerEmail.trim()) {
+      return 'Please enter your email address'
     }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(playerEmail.trim())) {
+      return 'Please enter a valid email address'
+    }
+
+    // Name is optional - no validation needed
 
     const filledPicks = picks.filter(p => p !== null).length
     if (filledPicks < 32) {
@@ -34,7 +43,8 @@ function SubmissionForm({ playerName, setPlayerName, picks, teamSelections, trad
 
     try {
       const submission = {
-        name: playerName.trim(),
+        email: playerEmail.trim(),
+        name: playerName.trim() || null,
         picks: picks.map((player, index) => ({
           pick: index + 1,
           playerName: player?.name || '',
@@ -89,15 +99,34 @@ function SubmissionForm({ playerName, setPlayerName, picks, teamSelections, trad
 
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
+          <label htmlFor="playerEmail" className="block text-xs font-medium text-gray-300 mb-1">
+            Email Address *
+          </label>
+          <input
+            type="email"
+            id="playerEmail"
+            value={playerEmail}
+            onChange={(e) => setPlayerEmail(e.target.value)}
+            placeholder="Enter your email"
+            className="w-full px-3 py-2 text-sm bg-dark-200 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-accent text-white placeholder-gray-500"
+            disabled={submitting || success}
+            required
+          />
+          <p className="mt-1 text-xs text-gray-500">
+            Used to identify your submission. You can update picks by submitting again with the same email.
+          </p>
+        </div>
+
+        <div>
           <label htmlFor="playerName" className="block text-xs font-medium text-gray-300 mb-1">
-            Your Name *
+            Display Name (optional)
           </label>
           <input
             type="text"
             id="playerName"
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
-            placeholder="Enter your name"
+            placeholder="Enter your name (shown on leaderboard)"
             className="w-full px-3 py-2 text-sm bg-dark-200 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-accent text-white placeholder-gray-500"
             disabled={submitting || success}
           />

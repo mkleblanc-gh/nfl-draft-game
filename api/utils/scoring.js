@@ -79,7 +79,8 @@ export function calculateScore(submission, draftResults, tradeData = { teamsUp: 
   const totalScore = firstRoundPoints + pickNumberPoints + teamPoints + tradePoints
 
   return {
-    name: submission.name,
+    email: submission.email,
+    name: submission.name || null,
     firstRoundPoints,
     pickNumberPoints,
     teamPoints,

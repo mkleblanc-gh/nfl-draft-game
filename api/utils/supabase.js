@@ -40,7 +40,8 @@ export async function saveSubmission(submission) {
   const { data, error } = await supabase
     .from('submissions')
     .insert({
-      name: submission.name,
+      email: submission.email,
+      name: submission.name || null,
       picks: submission.picks,
       trade_up: submission.tradesUp || [],
       trade_down: submission.tradesDown || []
@@ -59,6 +60,26 @@ export async function getSubmissions() {
 
   if (error) throw error
   return data || []
+}
+
+// Get only the latest submission per email (for scoring/leaderboard)
+export async function getLatestSubmissionPerEmail() {
+  const { data, error } = await supabase
+    .from('submissions')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+
+  // Deduplicate: keep only the latest submission per email
+  const latestByEmail = new Map()
+  for (const submission of data || []) {
+    if (submission.email && !latestByEmail.has(submission.email)) {
+      latestByEmail.set(submission.email, submission)
+    }
+  }
+
+  return Array.from(latestByEmail.values())
 }
 
 // Game Settings

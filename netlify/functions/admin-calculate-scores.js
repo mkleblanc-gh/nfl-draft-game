@@ -1,4 +1,4 @@
-import { getSubmissions, getDraftResults, saveScores, getActualTrades } from '../../api/utils/supabase.js'
+import { getLatestSubmissionPerEmail, getDraftResults, saveScores, getActualTrades } from '../../api/utils/supabase.js'
 import { calculateScore } from '../../api/utils/scoring.js'
 
 function verifyPassword(password) {
@@ -20,9 +20,9 @@ export async function handler(event, context) {
       }
     }
 
-    // Get submissions, draft results, and actual trades
+    // Get latest submission per email (deduplication), draft results, and actual trades
     const [submissions, draftResults, actualTrades] = await Promise.all([
-      getSubmissions(),
+      getLatestSubmissionPerEmail(),
       getDraftResults(),
       getActualTrades()
     ])
@@ -50,7 +50,7 @@ export async function handler(event, context) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         success: true,
-        message: `Scores calculated for ${scores.length} submissions`,
+        message: `Scores calculated for ${scores.length} unique participants`,
         scoresCount: scores.length
       })
     }
