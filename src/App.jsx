@@ -13,6 +13,7 @@ function App() {
   const [tradesUp, setTradesUp] = useState(['', '', ''])
   const [tradesDown, setTradesDown] = useState(['', '', ''])
   const [playerName, setPlayerName] = useState('')
+  const [playerEmail, setPlayerEmail] = useState('')
   const [isLocked, setIsLocked] = useState(false)
   const [loading, setLoading] = useState(true)
   const draftPicksRef = useRef(null)
@@ -177,6 +178,8 @@ function App() {
             <SubmissionForm
               playerName={playerName}
               setPlayerName={setPlayerName}
+              playerEmail={playerEmail}
+              setPlayerEmail={setPlayerEmail}
               picks={picks}
               teamSelections={teamSelections}
               tradesUp={tradesUp}

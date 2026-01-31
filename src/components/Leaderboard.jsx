@@ -57,6 +57,13 @@ function Leaderboard() {
     return lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   }
 
+  // Get display name: use name if provided, otherwise show email
+  const getDisplayName = (score) => {
+    if (score.name) return score.name
+    if (score.email) return score.email
+    return 'Anonymous'
+  }
+
   if (loading) {
     return (
       <div className="bg-dark-100 rounded-lg shadow-md p-6 text-center">
@@ -163,7 +170,7 @@ function Leaderboard() {
               const isWinner = hasScores && index === 0 && score.totalScore > 0
               return (
                 <tr
-                  key={score.name}
+                  key={score.email || score.name || index}
                   className={`hover:bg-dark-200 ${isWinner ? 'bg-yellow-900/20' : ''}`}
                 >
                   <td className="px-3 py-2 text-sm">
@@ -174,7 +181,7 @@ function Leaderboard() {
                     )}
                   </td>
                   <td className="px-3 py-2">
-                    <div className="font-medium text-white text-sm">{score.name}</div>
+                    <div className="font-medium text-white text-sm">{getDisplayName(score)}</div>
                   </td>
                   <td className="px-3 py-2 text-center text-xs text-gray-400 hidden md:table-cell">
                     {score.firstRoundPoints || 0}
@@ -203,10 +210,10 @@ function Leaderboard() {
       {/* Mobile view - show breakdown */}
       <div className="md:hidden mt-3 space-y-2">
         {scores.map((score, index) => (
-          <div key={score.name} className="p-2 bg-dark-200 rounded-lg">
+          <div key={score.email || score.name || index} className="p-2 bg-dark-200 rounded-lg">
             <div className="flex justify-between items-start mb-1">
               <div>
-                <div className="font-medium text-white text-sm">{score.name}</div>
+                <div className="font-medium text-white text-sm">{getDisplayName(score)}</div>
                 <div className="text-xs text-gray-500">Rank #{index + 1}</div>
               </div>
               <div className="font-bold text-accent">
