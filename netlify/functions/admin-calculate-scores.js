@@ -58,7 +58,7 @@ export async function handler(event, context) {
     console.error('Error calculating scores:', error)
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Failed to calculate scores' })
+      body: JSON.stringify({ error: error.message || 'Failed to calculate scores' })
     }
   }
 }
