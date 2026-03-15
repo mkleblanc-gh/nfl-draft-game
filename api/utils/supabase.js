@@ -82,7 +82,7 @@ export async function updateSetting(key, value) {
   // Try update first; if no row exists yet, insert
   const { data: updated, error: updateError } = await supabase
     .from('settings')
-    .update({ value, updated_at: new Date().toISOString() })
+    .update({ value })
     .eq('key', key)
     .select()
 
@@ -92,7 +92,7 @@ export async function updateSetting(key, value) {
 
   const { data: inserted, error: insertError } = await supabase
     .from('settings')
-    .insert({ key, value, updated_at: new Date().toISOString() })
+    .insert({ key, value })
     .select()
 
   if (insertError) throw insertError
