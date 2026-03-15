@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
-import { getLeaderboard, getGameStatus } from '../utils/api'
+import { getLeaderboard, getGameStatus, getSubmissions } from '../utils/api'
 
 function Leaderboard() {
   const [scores, setScores] = useState([])
+  const [submissionList, setSubmissionList] = useState([]) // shown when scores not yet calculated
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [picksEntered, setPicksEntered] = useState(0)
@@ -40,6 +41,18 @@ function Leaderboard() {
       setPicksEntered(statusData.picksEntered || 0)
       setLastUpdated(new Date())
       setError('')
+
+      // If no scores yet, try to fetch submission list (only available when locked)
+      if (leaderboardData.length === 0) {
+        try {
+          const subData = await getSubmissions()
+          setSubmissionList(subData.submissions || [])
+        } catch {
+          setSubmissionList([])
+        }
+      } else {
+        setSubmissionList([])
+      }
     } catch (err) {
       console.error('Error fetching data:', err)
       if (!silent) setError('Failed to load leaderboard. Please try again.')
@@ -88,9 +101,26 @@ function Leaderboard() {
 
   if (scores.length === 0) {
     return (
-      <div className="bg-dark-100 rounded-lg shadow-md p-6 text-center">
-        <div className="text-lg text-gray-300 mb-2">No submissions yet</div>
-        <p className="text-gray-500 text-sm">Be the first to make your predictions!</p>
+      <div className="bg-dark-100 rounded-lg shadow-md p-4">
+        <h2 className="text-lg font-bold text-white mb-3">Leaderboard</h2>
+        {submissionList.length === 0 ? (
+          <div className="text-center py-4 text-gray-400">No submissions yet</div>
+        ) : (
+          <>
+            <div className="space-y-1">
+              {submissionList.map((sub, i) => (
+                <div key={sub.email || i} className="flex justify-between items-center px-3 py-2 bg-dark-200 rounded text-sm">
+                  <span className="text-white font-medium">{sub.name || sub.email}</span>
+                  <span className="text-gray-500 text-xs">
+                    {sub.created_at
+                      ? new Date(sub.created_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                      : ''}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     )
   }

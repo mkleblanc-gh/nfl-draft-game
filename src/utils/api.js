@@ -20,6 +20,11 @@ export const submitPrediction = async (data) => {
   return response.data
 }
 
+export const getSubmissions = async () => {
+  const response = await axios.get(`${API_BASE}/submissions`)
+  return response.data
+}
+
 export const getLeaderboard = async () => {
   const response = await axios.get(`${API_BASE}/leaderboard`)
   return response.data

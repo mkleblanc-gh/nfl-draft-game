@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import DraftPicks from './components/DraftPicks'
 import TradePredictions from './components/TradePredictions'
 import SubmissionForm from './components/SubmissionForm'
+import SubmissionsViewer from './components/SubmissionsViewer'
 import Leaderboard from './components/Leaderboard'
 import AdminPanel from './components/AdminPanel'
 import { getGameStatus, getPlayers, getTeams } from './utils/api'
@@ -125,7 +126,7 @@ function App() {
                   : 'text-gray-400 hover:bg-dark-200'
               }`}
             >
-              Make Picks
+              {isLocked ? 'Submissions' : 'Make Picks'}
             </button>
             <button
               onClick={() => setCurrentView('leaderboard')}
@@ -153,11 +154,8 @@ function App() {
 
       {/* Main Content */}
       <main className="container mx-auto px-3 py-4">
-        {isLocked && currentView === 'predict' && (
-          <div className="bg-yellow-900/50 border-l-4 border-yellow-500 text-yellow-200 p-3 mb-4 rounded text-sm">
-            <p className="font-bold">Submissions are closed</p>
-            <p>The draft has started. Check the leaderboard for results!</p>
-          </div>
+        {currentView === 'predict' && isLocked && (
+          <SubmissionsViewer />
         )}
 
         {currentView === 'predict' && !isLocked && (

@@ -1,8 +1,13 @@
-import { useState } from 'react'
-import { submitPrediction } from '../utils/api'
+import { useState, useEffect } from 'react'
+import { submitPrediction, getTeams } from '../utils/api'
 
 function SubmissionForm({ playerName, setPlayerName, playerEmail, setPlayerEmail, picks, teamSelections, tradesUp, tradesDown, onSubmitSuccess }) {
+  const [teams, setTeams] = useState([])
   const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    getTeams().then(setTeams).catch(() => {})
+  }, [])
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
@@ -44,7 +49,7 @@ function SubmissionForm({ playerName, setPlayerName, playerEmail, setPlayerEmail
           playerName: player?.name || '',
           position: player?.position || '',
           college: player?.college || '',
-          predictedTeam: teamSelections?.[index] || null
+          predictedTeam: teamSelections?.[index] || teams[index]?.name || null
         })),
         tradesUp: tradesUp.filter(t => t !== ''),
         tradesDown: tradesDown.filter(t => t !== ''),
