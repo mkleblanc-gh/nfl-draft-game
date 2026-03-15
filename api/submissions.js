@@ -1,7 +1,25 @@
 import express from 'express'
-import { saveSubmission, getGameSettings } from './utils/supabase.js'
+import { saveSubmission, getLatestSubmissionPerEmail, getDraftResults, getGameSettings } from './utils/supabase.js'
 
 const router = express.Router()
+
+router.get('/', async (req, res) => {
+  try {
+    const settings = await getGameSettings()
+    const isLocked = settings.submission_locked?.toLowerCase() === 'true'
+    if (!isLocked) {
+      return res.status(403).json({ error: 'Submissions are not yet visible' })
+    }
+    const [submissions, draftResults] = await Promise.all([
+      getLatestSubmissionPerEmail(),
+      getDraftResults()
+    ])
+    res.json({ submissions, picksEntered: draftResults.length })
+  } catch (error) {
+    console.error('❌ Error fetching submissions:', error)
+    res.status(500).json({ error: 'Failed to fetch submissions' })
+  }
+})
 
 router.post('/', async (req, res) => {
   try {
