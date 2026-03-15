@@ -15,7 +15,15 @@ export async function handler(event, context) {
     if (!verifyPassword(password)) {
       return {
         statusCode: 401,
-        body: JSON.stringify({ error: 'Invalid password' })
+        body: JSON.stringify({
+          error: 'Invalid password',
+          debug: {
+            passwordReceived: !!password,
+            passwordLength: password?.length ?? 0,
+            envVarSet: !!process.env.ADMIN_PASSWORD,
+            envVarLength: process.env.ADMIN_PASSWORD?.length ?? 0
+          }
+        })
       }
     }
 
@@ -36,7 +44,7 @@ export async function handler(event, context) {
     console.error('Error saving draft results:', error)
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Failed to save draft results' })
+      body: JSON.stringify({ error: error.message || 'Failed to save draft results' })
     }
   }
 }

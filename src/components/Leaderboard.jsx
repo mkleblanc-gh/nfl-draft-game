@@ -150,19 +150,20 @@ function Leaderboard() {
             <tr>
               <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400">Rank</th>
               <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400">Name</th>
+              <th className="px-3 py-2 text-center text-xs font-semibold text-gray-400">Total</th>
+              <th className="px-1 py-2 hidden md:table-cell"></th>
               <th className="px-3 py-2 text-center text-xs font-semibold text-gray-400 hidden md:table-cell">
-                1st Rd
+                Full match
               </th>
               <th className="px-3 py-2 text-center text-xs font-semibold text-gray-400 hidden md:table-cell">
-                Pick #
+                Player and #
               </th>
               <th className="px-3 py-2 text-center text-xs font-semibold text-gray-400 hidden md:table-cell">
-                Team
+                Player only
               </th>
               <th className="px-3 py-2 text-center text-xs font-semibold text-gray-400 hidden md:table-cell">
                 Trades
               </th>
-              <th className="px-3 py-2 text-center text-xs font-semibold text-gray-400">Total</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-dark-300">
@@ -183,22 +184,25 @@ function Leaderboard() {
                   <td className="px-3 py-2">
                     <div className="font-medium text-white text-sm">{getDisplayName(score)}</div>
                   </td>
-                  <td className="px-3 py-2 text-center text-xs text-gray-400 hidden md:table-cell">
-                    {score.firstRoundPoints || 0}
+                  <td className="px-3 py-2 text-center">
+                    <span className="font-bold text-accent">
+                      {score.totalScore || 0}
+                    </span>
                   </td>
-                  <td className="px-3 py-2 text-center text-xs text-gray-400 hidden md:table-cell">
-                    {score.pickNumberPoints || 0}
+                  <td className="px-1 py-2 hidden md:table-cell">
+                    <div className="w-px h-5 bg-dark-300 mx-auto"></div>
                   </td>
                   <td className="px-3 py-2 text-center text-xs text-gray-400 hidden md:table-cell">
                     {score.teamPoints || 0}
                   </td>
                   <td className="px-3 py-2 text-center text-xs text-gray-400 hidden md:table-cell">
-                    {score.tradePoints || 0}
+                    {score.pickNumberPoints || 0}
                   </td>
-                  <td className="px-3 py-2 text-center">
-                    <span className="font-bold text-accent">
-                      {score.totalScore || 0}
-                    </span>
+                  <td className="px-3 py-2 text-center text-xs text-gray-400 hidden md:table-cell">
+                    {score.firstRoundPoints || 0}
+                  </td>
+                  <td className="px-3 py-2 text-center text-xs text-gray-400 hidden md:table-cell">
+                    {score.tradePoints || 0}
                   </td>
                 </tr>
               )
@@ -222,16 +226,16 @@ function Leaderboard() {
             </div>
             <div className="grid grid-cols-4 gap-1 text-xs text-gray-400">
               <div className="text-center">
-                <div>1st Rd</div>
-                <div className="font-semibold text-gray-300">{score.firstRoundPoints || 0}</div>
+                <div>Full match</div>
+                <div className="font-semibold text-gray-300">{score.teamPoints || 0}</div>
               </div>
               <div className="text-center">
-                <div>Pick #</div>
+                <div>Player and #</div>
                 <div className="font-semibold text-gray-300">{score.pickNumberPoints || 0}</div>
               </div>
               <div className="text-center">
-                <div>Team</div>
-                <div className="font-semibold text-gray-300">{score.teamPoints || 0}</div>
+                <div>Player only</div>
+                <div className="font-semibold text-gray-300">{score.firstRoundPoints || 0}</div>
               </div>
               <div className="text-center">
                 <div>Trades</div>

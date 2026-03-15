@@ -6,12 +6,18 @@ import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.SUPABASE_URL
 const supabaseKey = process.env.SUPABASE_ANON_KEY
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 if (!supabaseUrl || !supabaseKey) {
   throw new Error('Missing Supabase environment variables - check Netlify env vars or local .env')
 }
 
+// Public client (anon key) - for reads, subject to RLS
 const supabase = createClient(supabaseUrl, supabaseKey)
+
+// Admin client (service role key) - for writes, bypasses RLS
+// Falls back to anon key if service key not configured
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey || supabaseKey)
 
 // Players
 export async function getPlayers() {
@@ -37,7 +43,7 @@ export async function getTeams() {
 
 // Submissions
 export async function saveSubmission(submission) {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('submissions')
     .insert({
       email: submission.email,
@@ -100,22 +106,51 @@ export async function getGameSettings() {
 }
 
 export async function updateSetting(key, value) {
-  const { data, error } = await supabase
+  // Try update first; if no row exists yet, insert
+  const { data: updated, error: updateError } = await supabaseAdmin
     .from('settings')
-    .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' })
+    .update({ value })
+    .eq('key', key)
     .select()
 
-  if (error) throw error
-  return data[0]
+  if (updateError) throw updateError
+
+  if (updated && updated.length > 0) return updated[0]
+
+  const { data: inserted, error: insertError } = await supabaseAdmin
+    .from('settings')
+    .insert({ key, value })
+    .select()
+
+  if (insertError) throw insertError
+  return inserted[0]
 }
 
 // Draft Results
 export async function saveDraftResults(results, tradesUp = [], tradesDown = []) {
-  // Upsert results so repeated saves (e.g. live draft mode) don't fail on duplicate pick_number
-  const { data, error } = await supabase
+  // Update existing rows, insert new ones (no unique constraint on pick_number to rely on)
+  for (const result of results) {
+    const { data: updated, error: updateError } = await supabaseAdmin
+      .from('draft_results')
+      .update({ player_name: result.player_name, team_name: result.team_name })
+      .eq('pick_number', result.pick_number)
+      .select()
+
+    if (updateError) throw updateError
+
+    if (!updated || updated.length === 0) {
+      const { error: insertError } = await supabaseAdmin
+        .from('draft_results')
+        .insert(result)
+
+      if (insertError) throw insertError
+    }
+  }
+
+  const { data, error } = await supabaseAdmin
     .from('draft_results')
-    .upsert(results, { onConflict: 'pick_number' })
     .select()
+    .order('pick_number')
 
   if (error) throw error
 
@@ -145,14 +180,47 @@ export async function getDraftResults() {
 }
 
 // Scores
-export async function saveScores(scores) {
-  const { data, error } = await supabase
-    .from('scores')
-    .upsert(scores, { onConflict: 'name' })
-    .select()
+function scoreToRow(score) {
+  return {
+    submission_name: score.name,
+    first_round_points: score.firstRoundPoints,
+    pick_number_points: score.pickNumberPoints,
+    team_points: score.teamPoints,
+    trade_points: score.tradePoints,
+    total_score: score.totalScore
+  }
+}
 
-  if (error) throw error
-  return data
+function rowToScore(row) {
+  return {
+    name: row.submission_name,
+    firstRoundPoints: row.first_round_points,
+    pickNumberPoints: row.pick_number_points,
+    teamPoints: row.team_points,
+    tradePoints: row.trade_points,
+    totalScore: row.total_score
+  }
+}
+
+export async function saveScores(scores) {
+  for (const score of scores) {
+    const row = scoreToRow(score)
+    const { data: updated, error: updateError } = await supabaseAdmin
+      .from('scores')
+      .update(row)
+      .eq('submission_name', row.submission_name)
+      .select()
+
+    if (updateError) throw updateError
+
+    if (!updated || updated.length === 0) {
+      const { error: insertError } = await supabaseAdmin
+        .from('scores')
+        .insert(row)
+
+      if (insertError) throw insertError
+    }
+  }
 }
 
 export async function getScores() {
@@ -162,5 +230,5 @@ export async function getScores() {
     .order('total_score', { ascending: false })
 
   if (error) throw error
-  return data || []
+  return (data || []).map(rowToScore)
 }
