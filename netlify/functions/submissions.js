@@ -14,7 +14,7 @@ export async function handler(event, context) {
       return {
         statusCode: 200,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ submissions, picksEntered: draftResults.length })
+        body: JSON.stringify({ submissions, picksEntered: draftResults.length, draftResults })
       }
     } catch (error) {
       return { statusCode: 500, body: JSON.stringify({ error: 'Failed to fetch submissions' }) }

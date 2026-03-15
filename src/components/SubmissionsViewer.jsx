@@ -4,6 +4,7 @@ import { getSubmissions, getTeams } from '../utils/api'
 function SubmissionsViewer() {
   const [submissions, setSubmissions] = useState([])
   const [picksEntered, setPicksEntered] = useState(0)
+  const [draftResults, setDraftResults] = useState([]) // actual draft results entered so far
   const [teams, setTeams] = useState([]) // ordered by pick_number, used as default team fallback
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -19,6 +20,7 @@ function SubmissionsViewer() {
       const [subData, teamsData] = await Promise.all([getSubmissions(), getTeams()])
       setSubmissions(subData.submissions || [])
       setPicksEntered(subData.picksEntered || 0)
+      setDraftResults(subData.draftResults || [])
       setTeams(teamsData)
       setError('')
     } catch (err) {
@@ -31,6 +33,29 @@ function SubmissionsViewer() {
   // Returns the effective team for a pick: user's override or the default team for that slot
   const getTeamForPick = (pick, pickIndex) => {
     return pick.predictedTeam || teams[pickIndex]?.name || ''
+  }
+
+  // Returns { points, type } for a pick if that pick # has been entered, otherwise null
+  const getPickScore = (pick, pickIndex) => {
+    const pickNumber = pickIndex + 1
+    const actual = draftResults.find(r => r.pick_number === pickNumber)
+    if (!actual) return null
+
+    const predictedPlayer = pick.playerName?.toLowerCase() || ''
+    const predictedTeam = getTeamForPick(pick, pickIndex).toLowerCase()
+    const actualPlayer = actual.player_name.toLowerCase()
+    const actualTeam = actual.team_name.toLowerCase()
+    const firstRoundPlayers = draftResults.map(r => r.player_name.toLowerCase())
+
+    if (actualPlayer === predictedPlayer && actualTeam === predictedTeam) {
+      return { points: 5, type: 'team' }
+    } else if (actualPlayer === predictedPlayer) {
+      return { points: 3, type: 'pick' }
+    } else if (firstRoundPlayers.includes(predictedPlayer)) {
+      return { points: 1, type: 'firstRound' }
+    } else {
+      return { points: 0, type: 'none' }
+    }
   }
 
   const toggleExpanded = (index) => {
@@ -104,7 +129,7 @@ function SubmissionsViewer() {
                     Pick {nextPickNumber}:{' '}
                     <span className="text-gray-200">{nextPick.playerName}</span>
                     {getTeamForPick(nextPick, nextPickIndex) && (
-                      <span className="text-gray-600"> · {getTeamForPick(nextPick, nextPickIndex)}</span>
+                      <span className="text-gray-400"> · {getTeamForPick(nextPick, nextPickIndex)}</span>
                     )}
                   </span>
                 ) : null}
@@ -117,15 +142,26 @@ function SubmissionsViewer() {
               <div className="border-t border-dark-300 px-3 py-2">
                 {/* Picks list */}
                 <div className="space-y-0 mb-3">
-                  {picks.map((pick, i) => (
-                    <div key={i} className="flex items-baseline gap-1.5 py-0.5 border-b border-dark-300/50 last:border-0">
-                      <span className="text-gray-500 text-xs w-5 shrink-0 text-right">{i + 1}.</span>
-                      <span className="text-white text-xs font-medium">{pick.playerName || '—'}</span>
-                      {getTeamForPick(pick, i) && (
-                        <span className="text-gray-600 text-[10px] shrink-0">· {getTeamForPick(pick, i)}</span>
-                      )}
-                    </div>
-                  ))}
+                  {picks.map((pick, i) => {
+                    const score = getPickScore(pick, i)
+                    const scoreBadge = score === null ? null : score.points === 5
+                      ? <span className="text-yellow-400 font-bold text-xs shrink-0">5</span>
+                      : score.points === 3
+                      ? <span className="text-blue-400 font-bold text-xs shrink-0">3</span>
+                      : score.points === 1
+                      ? <span className="text-gray-400 font-bold text-xs shrink-0">1</span>
+                      : <span className="text-red-500/60 font-bold text-xs shrink-0">0</span>
+                    return (
+                      <div key={i} className="flex items-baseline gap-1.5 py-0.5 border-b border-dark-300/50 last:border-0">
+                        <span className="text-gray-500 text-xs w-5 shrink-0 text-right">{i + 1}.</span>
+                        <span className="text-white text-xs font-medium">{pick.playerName || '—'}</span>
+                        {getTeamForPick(pick, i) && (
+                          <span className="text-gray-400 text-[10px]">· {getTeamForPick(pick, i)}</span>
+                        )}
+                        {scoreBadge && <span className="ml-auto">{scoreBadge}</span>}
+                      </div>
+                    )
+                  })}
                 </div>
 
                 {/* Trades */}
