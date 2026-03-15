@@ -29,7 +29,7 @@ export async function handler(event, context) {
     console.error('Error toggling lock:', error)
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Failed to toggle lock' })
+      body: JSON.stringify({ error: error.message || 'Failed to toggle lock' })
     }
   }
 }

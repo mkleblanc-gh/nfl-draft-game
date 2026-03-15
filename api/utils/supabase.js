@@ -102,7 +102,7 @@ export async function getGameSettings() {
 export async function updateSetting(key, value) {
   const { data, error } = await supabase
     .from('settings')
-    .upsert({ key, value, updated_at: new Date().toISOString() })
+    .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' })
     .select()
 
   if (error) throw error
@@ -111,13 +111,10 @@ export async function updateSetting(key, value) {
 
 // Draft Results
 export async function saveDraftResults(results, tradesUp = [], tradesDown = []) {
-  // Clear existing results
-  await supabase.from('draft_results').delete().neq('id', 0)
-
-  // Insert new results
+  // Upsert results so repeated saves (e.g. live draft mode) don't fail on duplicate pick_number
   const { data, error } = await supabase
     .from('draft_results')
-    .insert(results)
+    .upsert(results, { onConflict: 'pick_number' })
     .select()
 
   if (error) throw error
@@ -149,13 +146,9 @@ export async function getDraftResults() {
 
 // Scores
 export async function saveScores(scores) {
-  // Clear existing scores
-  await supabase.from('scores').delete().neq('id', 0)
-
-  // Insert new scores
   const { data, error } = await supabase
     .from('scores')
-    .insert(scores)
+    .upsert(scores, { onConflict: 'name' })
     .select()
 
   if (error) throw error

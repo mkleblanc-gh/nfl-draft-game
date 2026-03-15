@@ -12,7 +12,7 @@ function TradePredictions({ tradesUp, tradesDown, onTradeChange }) {
   const fetchTeams = async () => {
     try {
       const teamsData = await getTeams()
-      setTeams(teamsData)
+      setTeams([...teamsData].sort((a, b) => a.name.localeCompare(b.name)))
     } catch (error) {
       console.error('Error fetching teams:', error)
     } finally {
