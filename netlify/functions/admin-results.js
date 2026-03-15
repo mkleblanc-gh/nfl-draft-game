@@ -15,7 +15,15 @@ export async function handler(event, context) {
     if (!verifyPassword(password)) {
       return {
         statusCode: 401,
-        body: JSON.stringify({ error: 'Invalid password' })
+        body: JSON.stringify({
+          error: 'Invalid password',
+          debug: {
+            passwordReceived: !!password,
+            passwordLength: password?.length ?? 0,
+            envVarSet: !!process.env.ADMIN_PASSWORD,
+            envVarLength: process.env.ADMIN_PASSWORD?.length ?? 0
+          }
+        })
       }
     }
 

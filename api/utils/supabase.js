@@ -79,13 +79,24 @@ export async function getGameSettings() {
 }
 
 export async function updateSetting(key, value) {
-  const { data, error } = await supabase
+  // Try update first; if no row exists yet, insert
+  const { data: updated, error: updateError } = await supabase
     .from('settings')
-    .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' })
+    .update({ value, updated_at: new Date().toISOString() })
+    .eq('key', key)
     .select()
 
-  if (error) throw error
-  return data[0]
+  if (updateError) throw updateError
+
+  if (updated && updated.length > 0) return updated[0]
+
+  const { data: inserted, error: insertError } = await supabase
+    .from('settings')
+    .insert({ key, value, updated_at: new Date().toISOString() })
+    .select()
+
+  if (insertError) throw insertError
+  return inserted[0]
 }
 
 // Draft Results
