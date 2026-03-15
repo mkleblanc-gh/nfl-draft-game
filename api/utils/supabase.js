@@ -6,12 +6,18 @@ import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.SUPABASE_URL
 const supabaseKey = process.env.SUPABASE_ANON_KEY
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 if (!supabaseUrl || !supabaseKey) {
   throw new Error('Missing Supabase environment variables - check Netlify env vars or local .env')
 }
 
+// Public client (anon key) - for reads, subject to RLS
 const supabase = createClient(supabaseUrl, supabaseKey)
+
+// Admin client (service role key) - for writes, bypasses RLS
+// Falls back to anon key if service key not configured
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey || supabaseKey)
 
 // Players
 export async function getPlayers() {
@@ -37,7 +43,7 @@ export async function getTeams() {
 
 // Submissions
 export async function saveSubmission(submission) {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('submissions')
     .insert({
       name: submission.name,
@@ -80,7 +86,7 @@ export async function getGameSettings() {
 
 export async function updateSetting(key, value) {
   // Try update first; if no row exists yet, insert
-  const { data: updated, error: updateError } = await supabase
+  const { data: updated, error: updateError } = await supabaseAdmin
     .from('settings')
     .update({ value })
     .eq('key', key)
@@ -90,7 +96,7 @@ export async function updateSetting(key, value) {
 
   if (updated && updated.length > 0) return updated[0]
 
-  const { data: inserted, error: insertError } = await supabase
+  const { data: inserted, error: insertError } = await supabaseAdmin
     .from('settings')
     .insert({ key, value })
     .select()
@@ -102,7 +108,7 @@ export async function updateSetting(key, value) {
 // Draft Results
 export async function saveDraftResults(results, tradesUp = [], tradesDown = []) {
   // Upsert results so repeated saves (e.g. live draft mode) don't fail on duplicate pick_number
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('draft_results')
     .upsert(results, { onConflict: 'pick_number' })
     .select()
@@ -136,7 +142,7 @@ export async function getDraftResults() {
 
 // Scores
 export async function saveScores(scores) {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('scores')
     .upsert(scores, { onConflict: 'name' })
     .select()
