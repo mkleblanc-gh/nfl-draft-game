@@ -16,18 +16,18 @@ export function calculateScore(submission, draftResults, tradeData = { teamsUp: 
   let tradePoints = 0
 
   // Get list of all players drafted in first round
-  const firstRoundPlayers = draftResults.map(result => result.player.toLowerCase())
+  const firstRoundPlayers = draftResults.map(result => result.player_name.toLowerCase())
 
   // Build maps for quick lookup
   const playerToPickMap = {} // player -> pick number
   const pickToPlayerAndTeamMap = {} // pick -> { player, team }
 
   draftResults.forEach(result => {
-    const playerLower = result.player.toLowerCase()
-    playerToPickMap[playerLower] = result.pick
-    pickToPlayerAndTeamMap[result.pick] = {
+    const playerLower = result.player_name.toLowerCase()
+    playerToPickMap[playerLower] = result.pick_number
+    pickToPlayerAndTeamMap[result.pick_number] = {
       player: playerLower,
-      team: result.team.toLowerCase()
+      team: result.team_name.toLowerCase()
     }
   })
 
@@ -63,14 +63,17 @@ export function calculateScore(submission, draftResults, tradeData = { teamsUp: 
     }
   })
 
-  // Calculate trade points
-  submission.tradesUp?.forEach(team => {
+  // Calculate trade points (field is trade_up/trade_down from Supabase)
+  const tradesUp = submission.trade_up || submission.tradesUp || []
+  const tradesDown = submission.trade_down || submission.tradesDown || []
+
+  tradesUp.forEach(team => {
     if (tradeData.teamsUp.some(t => t.toLowerCase() === team.toLowerCase())) {
       tradePoints += 2
     }
   })
 
-  submission.tradesDown?.forEach(team => {
+  tradesDown.forEach(team => {
     if (tradeData.teamsDown.some(t => t.toLowerCase() === team.toLowerCase())) {
       tradePoints += 2
     }
