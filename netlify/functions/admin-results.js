@@ -44,7 +44,7 @@ export async function handler(event, context) {
     console.error('Error saving draft results:', error)
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Failed to save draft results' })
+      body: JSON.stringify({ error: error.message || 'Failed to save draft results' })
     }
   }
 }
