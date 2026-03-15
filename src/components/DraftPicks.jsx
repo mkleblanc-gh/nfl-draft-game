@@ -99,6 +99,8 @@ const DraftPicks = forwardRef(function DraftPicks({ picks, onPickChange, teamSel
     return selectedName || teams[index]?.name || ''
   }
 
+  const sortedTeams = [...teams].sort((a, b) => a.name.localeCompare(b.name))
+
   if (loading) {
     return <div className="text-center py-4 text-gray-400">Loading players and teams...</div>
   }
@@ -145,7 +147,7 @@ const DraftPicks = forwardRef(function DraftPicks({ picks, onPickChange, teamSel
                 </div>
                 {showTeamDropdown[index] && (
                   <div className="absolute z-30 left-0 top-full mt-1 w-48 bg-dark-100 border border-dark-300 rounded shadow-lg max-h-48 overflow-y-auto">
-                    {teams.map((t) => (
+                    {sortedTeams.map((t) => (
                       <button
                         key={t.name}
                         type="button"
