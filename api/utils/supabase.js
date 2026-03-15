@@ -107,11 +107,29 @@ export async function updateSetting(key, value) {
 
 // Draft Results
 export async function saveDraftResults(results, tradesUp = [], tradesDown = []) {
-  // Upsert results so repeated saves (e.g. live draft mode) don't fail on duplicate pick_number
+  // Update existing rows, insert new ones (no unique constraint on pick_number to rely on)
+  for (const result of results) {
+    const { data: updated, error: updateError } = await supabaseAdmin
+      .from('draft_results')
+      .update({ player_name: result.player_name, team_name: result.team_name })
+      .eq('pick_number', result.pick_number)
+      .select()
+
+    if (updateError) throw updateError
+
+    if (!updated || updated.length === 0) {
+      const { error: insertError } = await supabaseAdmin
+        .from('draft_results')
+        .insert(result)
+
+      if (insertError) throw insertError
+    }
+  }
+
   const { data, error } = await supabaseAdmin
     .from('draft_results')
-    .upsert(results, { onConflict: 'pick_number' })
     .select()
+    .order('pick_number')
 
   if (error) throw error
 
@@ -142,13 +160,23 @@ export async function getDraftResults() {
 
 // Scores
 export async function saveScores(scores) {
-  const { data, error } = await supabaseAdmin
-    .from('scores')
-    .upsert(scores, { onConflict: 'name' })
-    .select()
+  for (const score of scores) {
+    const { data: updated, error: updateError } = await supabaseAdmin
+      .from('scores')
+      .update(score)
+      .eq('name', score.name)
+      .select()
 
-  if (error) throw error
-  return data
+    if (updateError) throw updateError
+
+    if (!updated || updated.length === 0) {
+      const { error: insertError } = await supabaseAdmin
+        .from('scores')
+        .insert(score)
+
+      if (insertError) throw insertError
+    }
+  }
 }
 
 export async function getScores() {
