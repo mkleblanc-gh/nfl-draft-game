@@ -25,6 +25,9 @@ function App() {
     try {
       const status = await getGameStatus()
       setIsLocked(status.locked)
+      if (status.locked) {
+        setCurrentView(v => v === 'predict' ? 'leaderboard' : v)
+      }
     } catch (error) {
       console.error('Error fetching game status:', error)
     } finally {

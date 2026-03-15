@@ -49,6 +49,8 @@ function AdminPanel({ onUpdate }) {
     fetchData()
   }, [])
 
+  const sortedTeams = [...teams].sort((a, b) => a.name.localeCompare(b.name))
+
   const fetchData = async () => {
     try {
       const [teamsData, playersData] = await Promise.all([
@@ -450,7 +452,7 @@ function AdminPanel({ onUpdate }) {
                   className="w-full px-3 py-2 text-sm bg-dark-100 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500 text-white"
                 >
                   <option value="">Select team...</option>
-                  {teams.map((team) => (
+                  {sortedTeams.map((team) => (
                     <option key={team.name} value={team.name}>
                       {team.name}
                     </option>
@@ -566,7 +568,7 @@ function AdminPanel({ onUpdate }) {
                       className="flex-1 px-2 py-1.5 text-xs bg-dark-100 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-accent text-white"
                     >
                       <option value="">Team {index + 1}...</option>
-                      {teams.map((team) => (
+                      {sortedTeams.map((team) => (
                         <option key={team.name} value={team.name}>
                           {team.name}
                         </option>
@@ -603,7 +605,7 @@ function AdminPanel({ onUpdate }) {
                       className="flex-1 px-2 py-1.5 text-xs bg-dark-100 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-accent text-white"
                     >
                       <option value="">Team {index + 1}...</option>
-                      {teams.map((team) => (
+                      {sortedTeams.map((team) => (
                         <option key={team.name} value={team.name}>
                           {team.name}
                         </option>
@@ -670,7 +672,7 @@ function AdminPanel({ onUpdate }) {
                   className="px-2 py-1.5 text-xs bg-dark-100 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-accent text-white"
                 >
                   <option value="">Actual team...</option>
-                  {teams.map((t) => (
+                  {sortedTeams.map((t) => (
                     <option key={t.name} value={t.name}>
                       {t.name}
                     </option>

@@ -159,12 +159,35 @@ export async function getDraftResults() {
 }
 
 // Scores
+function scoreToRow(score) {
+  return {
+    submission_name: score.name,
+    first_round_points: score.firstRoundPoints,
+    pick_number_points: score.pickNumberPoints,
+    team_points: score.teamPoints,
+    trade_points: score.tradePoints,
+    total_score: score.totalScore
+  }
+}
+
+function rowToScore(row) {
+  return {
+    name: row.submission_name,
+    firstRoundPoints: row.first_round_points,
+    pickNumberPoints: row.pick_number_points,
+    teamPoints: row.team_points,
+    tradePoints: row.trade_points,
+    totalScore: row.total_score
+  }
+}
+
 export async function saveScores(scores) {
   for (const score of scores) {
+    const row = scoreToRow(score)
     const { data: updated, error: updateError } = await supabaseAdmin
       .from('scores')
-      .update(score)
-      .eq('name', score.name)
+      .update(row)
+      .eq('submission_name', row.submission_name)
       .select()
 
     if (updateError) throw updateError
@@ -172,7 +195,7 @@ export async function saveScores(scores) {
     if (!updated || updated.length === 0) {
       const { error: insertError } = await supabaseAdmin
         .from('scores')
-        .insert(score)
+        .insert(row)
 
       if (insertError) throw insertError
     }
@@ -186,5 +209,5 @@ export async function getScores() {
     .order('total_score', { ascending: false })
 
   if (error) throw error
-  return data || []
+  return (data || []).map(rowToScore)
 }
