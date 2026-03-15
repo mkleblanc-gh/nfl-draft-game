@@ -98,13 +98,18 @@ function App() {
     <div className="min-h-screen bg-primary">
       {/* Header */}
       <header className="bg-dark-100 text-white shadow-lg border-b border-dark-200">
-        <div className="container mx-auto px-3 py-4">
-          <h1 className="text-2xl md:text-3xl font-bold text-center">
-            NFL Draft Game 2026
-          </h1>
-          <p className="text-center mt-1 text-sm text-gray-400">
-            Predict all 32 first-round picks and win!
-          </p>
+        <div className="container mx-auto px-3 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div className="text-center md:text-left">
+            <h1 className="text-2xl md:text-3xl font-bold">NFL Draft Game 2026</h1>
+            <p className="mt-0.5 text-sm text-gray-400">Predict all 32 first-round picks and win!</p>
+          </div>
+          <ul className="text-xs space-y-0.5 text-gray-500 shrink-0">
+            <li>• <span className="text-yellow-400 font-medium">5 pts</span> — correct player, pick number, and team</li>
+            <li>• <span className="text-blue-400 font-medium">3 pts</span> — correct player and pick number</li>
+            <li>• <span className="text-gray-300 font-medium">1 pt</span> — player drafted in first round (wrong position)</li>
+            <li>• <span className="text-green-400 font-medium">2 pts</span> — correct team that trades (up or down)</li>
+            <li>• Winner takes all. Ties get split.</li>
+          </ul>
         </div>
       </header>
 
@@ -201,21 +206,6 @@ function App() {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-dark-100 mt-8 py-4 border-t border-dark-200">
-        <div className="container mx-auto px-3">
-          <div className="bg-dark-200 p-3 rounded-lg">
-            <h3 className="font-bold text-sm text-white mb-2">Rules:</h3>
-            <ul className="text-xs space-y-0.5 text-gray-400">
-              <li>• One point for each player picked who is drafted in the first round</li>
-              <li>• Three points for correct player and pick number</li>
-              <li>• Five points for correct player, selection, and team</li>
-              <li>• Two points for each correct team that trades (up or down)</li>
-              <li>• Winner takes all. Ties get split.</li>
-            </ul>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

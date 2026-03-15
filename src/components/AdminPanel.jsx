@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { submitDraftResults, toggleLock, calculateScores, getTeams, getPlayers } from '../utils/api'
+import { submitDraftResults, toggleLock, calculateScores, getTeams, getPlayers, getDraftState, resetResults } from '../utils/api'
 
 function AdminPanel({ onUpdate }) {
   const [password, setPassword] = useState('')
@@ -64,11 +64,48 @@ function AdminPanel({ onUpdate }) {
     }
   }
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault()
-    // Simple check - the backend will do the real validation
-    if (password) {
+    if (!password) return
+
+    try {
+      const state = await getDraftState(password)
+
+      // Populate draft results
+      if (state.draftResults && state.draftResults.length > 0) {
+        const newResults = Array(32).fill(null).map(() => ({ team: '', player: '' }))
+        const newSearchTerms = Array(32).fill('')
+        state.draftResults.forEach(r => {
+          const idx = r.pick_number - 1
+          newResults[idx] = { team: r.team_name, player: r.player_name }
+          newSearchTerms[idx] = r.player_name
+        })
+        setDraftResults(newResults)
+        setSearchTerms(newSearchTerms)
+
+        // Advance live mode to next empty pick
+        const nextEmpty = newResults.findIndex(r => !r.player || !r.team)
+        const nextPick = nextEmpty === -1 ? 32 : nextEmpty + 1
+        setQuickPickNumber(nextPick)
+      }
+
+      // Populate actual trades
+      if (state.actualTrades) {
+        const up = state.actualTrades.tradesUp || []
+        const down = state.actualTrades.tradesDown || []
+        setActualTradesUp(up.length > 0 ? up : ['', '', ''])
+        setActualTradesDown(down.length > 0 ? down : ['', '', ''])
+      }
+
       setIsAuthenticated(true)
+    } catch (err) {
+      if (err.response?.status === 401) {
+        showMessage('error', 'Invalid password')
+      } else {
+        // Still log in even if state fetch fails — don't block access
+        console.error('Error loading draft state:', err)
+        setIsAuthenticated(true)
+      }
     }
   }
 
@@ -223,6 +260,36 @@ function AdminPanel({ onUpdate }) {
       } else {
         showMessage('error', 'Failed to calculate scores')
       }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const [resetConfirm, setResetConfirm] = useState(false)
+
+  const handleResetResults = async () => {
+    if (!resetConfirm) {
+      setResetConfirm(true)
+      return
+    }
+    setLoading(true)
+    setResetConfirm(false)
+    try {
+      await resetResults(password)
+      // Clear local state
+      setDraftResults(Array(32).fill({ team: '', player: '' }))
+      setSearchTerms(Array(32).fill(''))
+      setActualTradesUp(['', '', ''])
+      setActualTradesDown(['', '', ''])
+      setQuickPickNumber(1)
+      setQuickPlayer('')
+      setQuickTeam('')
+      setQuickPlayerSearch('')
+      showMessage('success', 'Results reset successfully. Submissions are now unlocked.')
+      if (onUpdate) onUpdate()
+    } catch (err) {
+      console.error('Error resetting results:', err)
+      showMessage('error', err.response?.data?.error || 'Failed to reset results')
     } finally {
       setLoading(false)
     }
@@ -730,6 +797,32 @@ function AdminPanel({ onUpdate }) {
             >
               Calculate Scores
             </button>
+          </div>
+
+          <div className="p-3 bg-red-950/40 border border-red-800 rounded-lg">
+            <h3 className="font-semibold text-sm text-red-300 mb-2">Fully Reset Results</h3>
+            <p className="text-xs text-gray-400 mb-3">
+              Deletes all scores and draft results, unlocks submissions, and clears trades. Submissions are preserved.
+            </p>
+            <button
+              onClick={handleResetResults}
+              disabled={loading}
+              className={`px-4 py-2 text-sm rounded-lg font-medium disabled:bg-gray-600 text-white transition-colors ${
+                resetConfirm
+                  ? 'bg-red-600 hover:bg-red-700 animate-pulse'
+                  : 'bg-red-900 hover:bg-red-700'
+              }`}
+            >
+              {resetConfirm ? 'Click again to confirm reset' : 'Reset All Results'}
+            </button>
+            {resetConfirm && (
+              <button
+                onClick={() => setResetConfirm(false)}
+                className="ml-2 px-3 py-2 text-xs text-gray-400 hover:text-white"
+              >
+                Cancel
+              </button>
+            )}
           </div>
 
           <div className="p-3 bg-dark-300 rounded-lg">

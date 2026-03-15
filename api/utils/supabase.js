@@ -43,15 +43,30 @@ export async function getTeams() {
 
 // Submissions
 export async function saveSubmission(submission) {
+  const displayName = submission.name?.trim() || submission.email
+  const row = {
+    name: displayName,
+    email: submission.email,
+    picks: submission.picks,
+    trade_up: submission.tradesUp || [],
+    trade_down: submission.tradesDown || []
+  }
+
+  // Deduplicate by email: update existing submission if found
+  if (submission.email) {
+    const { data: updated, error: updateError } = await supabaseAdmin
+      .from('submissions')
+      .update(row)
+      .eq('email', submission.email)
+      .select()
+
+    if (updateError) throw updateError
+    if (updated && updated.length > 0) return updated[0]
+  }
+
   const { data, error } = await supabaseAdmin
     .from('submissions')
-    .insert({
-      email: submission.email,
-      name: submission.name || null,
-      picks: submission.picks,
-      trade_up: submission.tradesUp || [],
-      trade_down: submission.tradesDown || []
-    })
+    .insert(row)
     .select()
 
   if (error) throw error
@@ -124,6 +139,21 @@ export async function updateSetting(key, value) {
 
   if (insertError) throw insertError
   return inserted[0]
+}
+
+export async function resetResults() {
+  // Delete all scores
+  const { error: scoresError } = await supabaseAdmin.from('scores').delete().neq('id', 0)
+  if (scoresError) throw scoresError
+
+  // Delete all draft results
+  const { error: resultsError } = await supabaseAdmin.from('draft_results').delete().neq('id', 0)
+  if (resultsError) throw resultsError
+
+  // Reset settings
+  await updateSetting('submission_locked', 'false')
+  await updateSetting('actual_trades_up', '[]')
+  await updateSetting('actual_trades_down', '[]')
 }
 
 // Draft Results

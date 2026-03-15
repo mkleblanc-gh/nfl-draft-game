@@ -5,7 +5,7 @@ const router = express.Router()
 
 router.post('/', async (req, res) => {
   try {
-    console.log('📝 Received submission request from:', req.body.name)
+    console.log('📝 Received submission request from:', req.body.email)
 
     // Check if submissions are locked
     const settings = await getGameSettings()
@@ -18,7 +18,7 @@ router.post('/', async (req, res) => {
     const submission = req.body
 
     // Validate submission
-    if (!submission.name || !submission.picks || submission.picks.length !== 32) {
+    if (!submission.email || !submission.picks || submission.picks.length !== 32) {
       console.log('❌ Invalid submission data')
       return res.status(400).json({ error: 'Invalid submission data' })
     }
