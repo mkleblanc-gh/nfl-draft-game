@@ -55,3 +55,13 @@ export const calculateScores = async (password) => {
   })
   return response.data
 }
+
+export const getDraftState = async (password) => {
+  const response = await axios.post(`${API_BASE}/admin-draft-state`, { password })
+  return response.data
+}
+
+export const resetResults = async (password) => {
+  const response = await axios.post(`${API_BASE}/admin-reset`, { password })
+  return response.data
+}

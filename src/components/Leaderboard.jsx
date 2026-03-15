@@ -144,7 +144,7 @@ function Leaderboard() {
         </div>
       )}
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto hidden md:block">
         <table className="w-full">
           <thead className="bg-dark-200">
             <tr>
@@ -211,39 +211,44 @@ function Leaderboard() {
         </table>
       </div>
 
-      {/* Mobile view - show breakdown */}
+      {/* Mobile view */}
       <div className="md:hidden mt-3 space-y-2">
-        {scores.map((score, index) => (
-          <div key={score.email || score.name || index} className="p-2 bg-dark-200 rounded-lg">
-            <div className="flex justify-between items-start mb-1">
-              <div>
-                <div className="font-medium text-white text-sm">{getDisplayName(score)}</div>
-                <div className="text-xs text-gray-500">Rank #{index + 1}</div>
+        {scores.map((score, index) => {
+          const isWinner = hasScores && index === 0 && score.totalScore > 0
+          return (
+            <div key={score.email || score.name || index} className={`rounded-lg overflow-hidden border ${isWinner ? 'border-yellow-700' : 'border-dark-300'}`}>
+              {/* Main row */}
+              <div className={`flex items-center justify-between px-3 py-2 ${isWinner ? 'bg-yellow-900/20' : 'bg-dark-200'}`}>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm w-5 shrink-0">
+                    {isWinner ? '🏆' : <span className="text-gray-400">{index + 1}</span>}
+                  </span>
+                  <span className="font-medium text-white text-sm">{getDisplayName(score)}</span>
+                </div>
+                <span className="font-bold text-accent text-base">{score.totalScore || 0}</span>
               </div>
-              <div className="font-bold text-accent">
-                {score.totalScore || 0}
+              {/* Detail strip */}
+              <div className="grid grid-cols-4 bg-dark-300 border-t border-dark-400">
+                <div className="text-center px-1 py-1.5 border-r border-dark-400">
+                  <div className="text-gray-500 text-[10px]">Full match</div>
+                  <div className="font-semibold text-gray-300 text-xs">{score.teamPoints || 0}</div>
+                </div>
+                <div className="text-center px-1 py-1.5 border-r border-dark-400">
+                  <div className="text-gray-500 text-[10px]">Player+#</div>
+                  <div className="font-semibold text-gray-300 text-xs">{score.pickNumberPoints || 0}</div>
+                </div>
+                <div className="text-center px-1 py-1.5 border-r border-dark-400">
+                  <div className="text-gray-500 text-[10px]">Player only</div>
+                  <div className="font-semibold text-gray-300 text-xs">{score.firstRoundPoints || 0}</div>
+                </div>
+                <div className="text-center px-1 py-1.5">
+                  <div className="text-gray-500 text-[10px]">Trades</div>
+                  <div className="font-semibold text-gray-300 text-xs">{score.tradePoints || 0}</div>
+                </div>
               </div>
             </div>
-            <div className="grid grid-cols-4 gap-1 text-xs text-gray-400">
-              <div className="text-center">
-                <div>Full match</div>
-                <div className="font-semibold text-gray-300">{score.teamPoints || 0}</div>
-              </div>
-              <div className="text-center">
-                <div>Player and #</div>
-                <div className="font-semibold text-gray-300">{score.pickNumberPoints || 0}</div>
-              </div>
-              <div className="text-center">
-                <div>Player only</div>
-                <div className="font-semibold text-gray-300">{score.firstRoundPoints || 0}</div>
-              </div>
-              <div className="text-center">
-                <div>Trades</div>
-                <div className="font-semibold text-gray-300">{score.tradePoints || 0}</div>
-              </div>
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

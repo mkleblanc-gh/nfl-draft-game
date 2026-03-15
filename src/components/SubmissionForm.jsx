@@ -7,18 +7,12 @@ function SubmissionForm({ playerName, setPlayerName, playerEmail, setPlayerEmail
   const [success, setSuccess] = useState(false)
 
   const validateSubmission = () => {
-    // Email is required
     if (!playerEmail.trim()) {
       return 'Please enter your email address'
     }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(playerEmail.trim())) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(playerEmail.trim())) {
       return 'Please enter a valid email address'
     }
-
-    // Name is optional - no validation needed
 
     const filledPicks = picks.filter(p => p !== null).length
     if (filledPicks < 32) {
@@ -50,20 +44,17 @@ function SubmissionForm({ playerName, setPlayerName, playerEmail, setPlayerEmail
           playerName: player?.name || '',
           position: player?.position || '',
           college: player?.college || '',
-          predictedTeam: teamSelections?.[index] || null // Include custom team prediction if set
+          predictedTeam: teamSelections?.[index] || null
         })),
         tradesUp: tradesUp.filter(t => t !== ''),
         tradesDown: tradesDown.filter(t => t !== ''),
         timestamp: new Date().toISOString()
       }
 
-      console.log('Submitting:', submission) // Debug log
-
       await submitPrediction(submission)
       setSuccess(true)
       setError('')
 
-      // Scroll to top to show success message
       window.scrollTo({ top: 0, behavior: 'smooth' })
 
       if (onSubmitSuccess) {
@@ -100,7 +91,7 @@ function SubmissionForm({ playerName, setPlayerName, playerEmail, setPlayerEmail
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
           <label htmlFor="playerEmail" className="block text-xs font-medium text-gray-300 mb-1">
-            Email Address *
+            Email *
           </label>
           <input
             type="email"
@@ -112,21 +103,18 @@ function SubmissionForm({ playerName, setPlayerName, playerEmail, setPlayerEmail
             disabled={submitting || success}
             required
           />
-          <p className="mt-1 text-xs text-gray-500">
-            Used to identify your submission. You can update picks by submitting again with the same email.
-          </p>
         </div>
 
         <div>
           <label htmlFor="playerName" className="block text-xs font-medium text-gray-300 mb-1">
-            Display Name (optional)
+            Display Name <span className="text-gray-500">(optional — shown on leaderboard)</span>
           </label>
           <input
             type="text"
             id="playerName"
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
-            placeholder="Enter your name (shown on leaderboard)"
+            placeholder="Enter a display name, or leave blank to use your email"
             className="w-full px-3 py-2 text-sm bg-dark-200 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-accent text-white placeholder-gray-500"
             disabled={submitting || success}
           />
@@ -166,7 +154,7 @@ function SubmissionForm({ playerName, setPlayerName, playerEmail, setPlayerEmail
 
         {!success && (
           <p className="text-xs text-gray-500 text-center">
-            You can submit multiple times. Your latest submission will be used.
+            Submitting again with the same email will update your existing entry.
           </p>
         )}
       </form>
