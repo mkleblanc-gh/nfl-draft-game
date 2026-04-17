@@ -202,22 +202,22 @@ function App() {
         {currentView === 'rules' && (
           <div className="bg-dark-100 rounded-lg shadow-md p-4 max-w-lg mx-auto">
             <h2 className="text-lg font-bold text-white mb-4">Scoring Rules</h2>
-            <ul className="space-y-3 text-sm">
-              <li className="flex items-start gap-3">
-                <span className="text-yellow-400 font-bold text-base shrink-0">5 pts</span>
-                <span className="text-gray-300">Correct player, pick number, <em>and</em> team</span>
+            <ul className="space-y-3">
+              <li className="flex items-center gap-4">
+                <span className="text-yellow-400 font-bold text-base w-14 text-right shrink-0">5 pts</span>
+                <span className="text-gray-300 text-sm">Correct player, pick number, <em>and</em> team</span>
               </li>
-              <li className="flex items-start gap-3">
-                <span className="text-blue-400 font-bold text-base shrink-0">3 pts</span>
-                <span className="text-gray-300">Correct player and pick number (wrong team)</span>
+              <li className="flex items-center gap-4">
+                <span className="text-blue-400 font-bold text-base w-14 text-right shrink-0">3 pts</span>
+                <span className="text-gray-300 text-sm">Correct player and pick number (wrong team)</span>
               </li>
-              <li className="flex items-start gap-3">
-                <span className="text-gray-300 font-bold text-base shrink-0">1 pt</span>
-                <span className="text-gray-300">Player was drafted in the first round (wrong position)</span>
+              <li className="flex items-center gap-4">
+                <span className="text-gray-300 font-bold text-base w-14 text-right shrink-0">1 pt</span>
+                <span className="text-gray-300 text-sm">Player drafted in the first round (wrong position)</span>
               </li>
-              <li className="flex items-start gap-3">
-                <span className="text-green-400 font-bold text-base shrink-0">2 pts</span>
-                <span className="text-gray-300">Correct team predicted to trade up or down</span>
+              <li className="flex items-center gap-4">
+                <span className="text-green-400 font-bold text-base w-14 text-right shrink-0">2 pts</span>
+                <span className="text-gray-300 text-sm">Correct team predicted to trade up or down</span>
               </li>
             </ul>
             <div className="mt-4 pt-4 border-t border-dark-300 text-xs text-gray-500">
