@@ -56,12 +56,19 @@ const DraftPicks = forwardRef(function DraftPicks({ picks, onPickChange, teamSel
     setShowDropdown(newShowDropdown)
   }
 
-  const getFilteredPlayers = (searchTerm) => {
+  const getFilteredPlayers = (searchTerm, currentIndex) => {
     if (!searchTerm) return []
+    const selectedNames = new Set(
+      picks
+        .filter((p, i) => p !== null && i !== currentIndex)
+        .map(p => p.name)
+    )
     return players.filter(player =>
-      player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      player.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      player.college.toLowerCase().includes(searchTerm.toLowerCase())
+      !selectedNames.has(player.name) && (
+        player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        player.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        player.college.toLowerCase().includes(searchTerm.toLowerCase())
+      )
     ).slice(0, 10)
   }
 
@@ -202,8 +209,8 @@ const DraftPicks = forwardRef(function DraftPicks({ picks, onPickChange, teamSel
 
               {showDropdown[index] && (
                 <div className="absolute z-20 w-full mt-1 bg-dark-100 border border-dark-300 rounded shadow-lg max-h-48 overflow-y-auto">
-                  {getFilteredPlayers(searchTerms[index]).length > 0 ? (
-                    getFilteredPlayers(searchTerms[index]).map((player) => (
+                  {getFilteredPlayers(searchTerms[index], index).length > 0 ? (
+                    getFilteredPlayers(searchTerms[index], index).map((player) => (
                       <button
                         key={player.name}
                         onClick={() => selectPlayer(index, player)}

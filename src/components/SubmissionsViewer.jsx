@@ -58,6 +58,14 @@ function SubmissionsViewer() {
     }
   }
 
+  const getTotalScore = (sub) => {
+    const picks = sub.picks || []
+    return picks.reduce((sum, pick, i) => {
+      const score = getPickScore(pick, i)
+      return sum + (score ? score.points : 0)
+    }, 0)
+  }
+
   const toggleExpanded = (index) => {
     setExpanded(prev => ({ ...prev, [index]: !prev[index] }))
   }
@@ -113,6 +121,8 @@ function SubmissionsViewer() {
         const nextPick = picks[nextPickIndex]
         const nextPickNumber = picksEntered + 1
 
+        const totalScore = picksEntered > 0 ? getTotalScore(sub) : null
+
         return (
           <div key={sub.email || index} className="bg-dark-100 rounded-lg border border-dark-300 overflow-hidden">
             {/* Header row */}
@@ -134,7 +144,12 @@ function SubmissionsViewer() {
                   </span>
                 ) : null}
               </div>
-              <span className="text-gray-500 text-xs ml-2 shrink-0">{isOpen ? '▲' : '▼'}</span>
+              <div className="flex items-center gap-3 ml-2 shrink-0">
+                {totalScore !== null && (
+                  <span className="text-sm font-bold text-accent">Score: {totalScore}</span>
+                )}
+                <span className="text-gray-500 text-xs">{isOpen ? '▲' : '▼'}</span>
+              </div>
             </button>
 
             {/* Expanded content */}
