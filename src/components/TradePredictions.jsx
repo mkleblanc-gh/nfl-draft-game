@@ -12,7 +12,15 @@ function TradePredictions({ tradesUp, tradesDown, onTradeChange }) {
   const fetchTeams = async () => {
     try {
       const teamsData = await getTeams()
-      setTeams([...teamsData].sort((a, b) => a.name.localeCompare(b.name)))
+      // Deduplicate by name (teams table has one row per pick slot, so a team
+      // with multiple picks appears more than once)
+      const seen = new Set()
+      const unique = teamsData.filter(t => {
+        if (seen.has(t.name)) return false
+        seen.add(t.name)
+        return true
+      })
+      setTeams([...unique].sort((a, b) => a.name.localeCompare(b.name)))
     } catch (error) {
       console.error('Error fetching teams:', error)
     } finally {
