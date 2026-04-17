@@ -19,7 +19,7 @@ router.post('/', async (req, res) => {
     res.json({ success: true, message: `Submissions ${locked ? 'locked' : 'unlocked'}` })
   } catch (error) {
     console.error('Error toggling lock:', error)
-    res.status(500).json({ error: 'Failed to toggle lock' })
+    res.status(500).json({ error: error.message || 'Failed to toggle lock' })
   }
 })
 

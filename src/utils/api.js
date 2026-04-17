@@ -20,6 +20,11 @@ export const submitPrediction = async (data) => {
   return response.data
 }
 
+export const getSubmissions = async () => {
+  const response = await axios.get(`${API_BASE}/submissions`)
+  return response.data
+}
+
 export const getLeaderboard = async () => {
   const response = await axios.get(`${API_BASE}/leaderboard`)
   return response.data
@@ -53,5 +58,15 @@ export const calculateScores = async (password) => {
   const response = await axios.post(`${API_BASE}/admin-calculate-scores`, {
     password
   })
+  return response.data
+}
+
+export const getDraftState = async (password) => {
+  const response = await axios.post(`${API_BASE}/admin-draft-state`, { password })
+  return response.data
+}
+
+export const resetResults = async (password) => {
+  const response = await axios.post(`${API_BASE}/admin-reset`, { password })
   return response.data
 }

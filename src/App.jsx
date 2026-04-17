@@ -2,17 +2,19 @@ import { useState, useEffect, useRef } from 'react'
 import DraftPicks from './components/DraftPicks'
 import TradePredictions from './components/TradePredictions'
 import SubmissionForm from './components/SubmissionForm'
+import SubmissionsViewer from './components/SubmissionsViewer'
 import Leaderboard from './components/Leaderboard'
 import AdminPanel from './components/AdminPanel'
 import { getGameStatus, getPlayers, getTeams } from './utils/api'
 
 function App() {
-  const [currentView, setCurrentView] = useState('predict') // 'predict', 'leaderboard', 'admin'
+  const [currentView, setCurrentView] = useState('predict') // 'predict', 'leaderboard', 'rules', 'admin'
   const [picks, setPicks] = useState(Array(32).fill(null))
   const [teamSelections, setTeamSelections] = useState(Array(32).fill(null)) // Custom team for each pick slot
   const [tradesUp, setTradesUp] = useState(['', '', ''])
   const [tradesDown, setTradesDown] = useState(['', '', ''])
   const [playerName, setPlayerName] = useState('')
+  const [playerEmail, setPlayerEmail] = useState('')
   const [isLocked, setIsLocked] = useState(false)
   const [loading, setLoading] = useState(true)
   const draftPicksRef = useRef(null)
@@ -94,13 +96,11 @@ function App() {
     <div className="min-h-screen bg-primary">
       {/* Header */}
       <header className="bg-dark-100 text-white shadow-lg border-b border-dark-200">
-        <div className="container mx-auto px-3 py-4">
-          <h1 className="text-2xl md:text-3xl font-bold text-center">
-            NFL Draft Game 2026
-          </h1>
-          <p className="text-center mt-1 text-sm text-gray-400">
-            Predict all 32 first-round picks and win!
-          </p>
+        <div className="container mx-auto px-3 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div className="text-center md:text-left">
+            <h1 className="text-2xl md:text-3xl font-bold">NFL Draft Game 2026</h1>
+            <p className="mt-0.5 text-sm text-gray-400">Predict all 32 first-round picks, ya dog</p>
+          </div>
         </div>
       </header>
 
@@ -116,7 +116,7 @@ function App() {
                   : 'text-gray-400 hover:bg-dark-200'
               }`}
             >
-              Make Picks
+              {isLocked ? 'Submissions' : 'Make Picks'}
             </button>
             <button
               onClick={() => setCurrentView('leaderboard')}
@@ -129,6 +129,16 @@ function App() {
               Leaderboard
             </button>
             <button
+              onClick={() => setCurrentView('rules')}
+              className={`px-3 md:px-5 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                currentView === 'rules'
+                  ? 'bg-secondary text-white'
+                  : 'text-gray-400 hover:bg-dark-200'
+              }`}
+            >
+              Rules
+            </button>
+            <button
               onClick={() => setCurrentView('admin')}
               className={`px-3 md:px-5 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 currentView === 'admin'
@@ -136,7 +146,7 @@ function App() {
                   : 'text-gray-400 hover:bg-dark-200'
               }`}
             >
-              Admin
+              Commish
             </button>
           </div>
         </div>
@@ -144,11 +154,8 @@ function App() {
 
       {/* Main Content */}
       <main className="container mx-auto px-3 py-4">
-        {isLocked && currentView === 'predict' && (
-          <div className="bg-yellow-900/50 border-l-4 border-yellow-500 text-yellow-200 p-3 mb-4 rounded text-sm">
-            <p className="font-bold">Submissions are closed</p>
-            <p>The draft has started. Check the leaderboard for results!</p>
-          </div>
+        {currentView === 'predict' && isLocked && (
+          <SubmissionsViewer />
         )}
 
         {currentView === 'predict' && !isLocked && (
@@ -177,6 +184,8 @@ function App() {
             <SubmissionForm
               playerName={playerName}
               setPlayerName={setPlayerName}
+              playerEmail={playerEmail}
+              setPlayerEmail={setPlayerEmail}
               picks={picks}
               teamSelections={teamSelections}
               tradesUp={tradesUp}
@@ -190,26 +199,38 @@ function App() {
           <Leaderboard />
         )}
 
+        {currentView === 'rules' && (
+          <div className="bg-dark-100 rounded-lg shadow-md p-4 max-w-lg mx-auto">
+            <h2 className="text-lg font-bold text-white mb-4">Scoring Rules</h2>
+            <ul className="space-y-3 text-sm">
+              <li className="flex items-start gap-3">
+                <span className="text-yellow-400 font-bold text-base shrink-0">5 pts</span>
+                <span className="text-gray-300">Correct player, pick number, <em>and</em> team</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-blue-400 font-bold text-base shrink-0">3 pts</span>
+                <span className="text-gray-300">Correct player and pick number (wrong team)</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-gray-300 font-bold text-base shrink-0">1 pt</span>
+                <span className="text-gray-300">Player was drafted in the first round (wrong position)</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-green-400 font-bold text-base shrink-0">2 pts</span>
+                <span className="text-gray-300">Correct team predicted to trade up or down</span>
+              </li>
+            </ul>
+            <div className="mt-4 pt-4 border-t border-dark-300 text-xs text-gray-500">
+              Winner takes all. Ties get split.
+            </div>
+          </div>
+        )}
+
         {currentView === 'admin' && (
           <AdminPanel onUpdate={checkGameStatus} />
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-dark-100 mt-8 py-4 border-t border-dark-200">
-        <div className="container mx-auto px-3">
-          <div className="bg-dark-200 p-3 rounded-lg">
-            <h3 className="font-bold text-sm text-white mb-2">Rules:</h3>
-            <ul className="text-xs space-y-0.5 text-gray-400">
-              <li>• One point for each player picked who is drafted in the first round</li>
-              <li>• Three points for correct player and pick number</li>
-              <li>• Five points for correct player, selection, and team</li>
-              <li>• Two points for each correct team that trades (up or down)</li>
-              <li>• Winner takes all. Ties get split.</li>
-            </ul>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { submitDraftResults, toggleLock, calculateScores, getTeams, getPlayers } from '../utils/api'
+import { submitDraftResults, toggleLock, calculateScores, getTeams, getPlayers, getDraftState, resetResults } from '../utils/api'
 
 function AdminPanel({ onUpdate }) {
   const [password, setPassword] = useState('')
@@ -49,6 +49,8 @@ function AdminPanel({ onUpdate }) {
     fetchData()
   }, [])
 
+  const sortedTeams = [...teams].sort((a, b) => a.name.localeCompare(b.name))
+
   const fetchData = async () => {
     try {
       const [teamsData, playersData] = await Promise.all([
@@ -62,11 +64,48 @@ function AdminPanel({ onUpdate }) {
     }
   }
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault()
-    // Simple check - the backend will do the real validation
-    if (password) {
+    if (!password) return
+
+    try {
+      const state = await getDraftState(password)
+
+      // Populate draft results
+      if (state.draftResults && state.draftResults.length > 0) {
+        const newResults = Array(32).fill(null).map(() => ({ team: '', player: '' }))
+        const newSearchTerms = Array(32).fill('')
+        state.draftResults.forEach(r => {
+          const idx = r.pick_number - 1
+          newResults[idx] = { team: r.team_name, player: r.player_name }
+          newSearchTerms[idx] = r.player_name
+        })
+        setDraftResults(newResults)
+        setSearchTerms(newSearchTerms)
+
+        // Advance live mode to next empty pick
+        const nextEmpty = newResults.findIndex(r => !r.player || !r.team)
+        const nextPick = nextEmpty === -1 ? 32 : nextEmpty + 1
+        setQuickPickNumber(nextPick)
+      }
+
+      // Populate actual trades
+      if (state.actualTrades) {
+        const up = state.actualTrades.tradesUp || []
+        const down = state.actualTrades.tradesDown || []
+        setActualTradesUp(up.length > 0 ? up : ['', '', ''])
+        setActualTradesDown(down.length > 0 ? down : ['', '', ''])
+      }
+
       setIsAuthenticated(true)
+    } catch (err) {
+      if (err.response?.status === 401) {
+        showMessage('error', 'Invalid password')
+      } else {
+        // Still log in even if state fetch fails — don't block access
+        console.error('Error loading draft state:', err)
+        setIsAuthenticated(true)
+      }
     }
   }
 
@@ -226,6 +265,36 @@ function AdminPanel({ onUpdate }) {
     }
   }
 
+  const [resetConfirm, setResetConfirm] = useState(false)
+
+  const handleResetResults = async () => {
+    if (!resetConfirm) {
+      setResetConfirm(true)
+      return
+    }
+    setLoading(true)
+    setResetConfirm(false)
+    try {
+      await resetResults(password)
+      // Clear local state
+      setDraftResults(Array(32).fill({ team: '', player: '' }))
+      setSearchTerms(Array(32).fill(''))
+      setActualTradesUp(['', '', ''])
+      setActualTradesDown(['', '', ''])
+      setQuickPickNumber(1)
+      setQuickPlayer('')
+      setQuickTeam('')
+      setQuickPlayerSearch('')
+      showMessage('success', 'Results reset successfully. Submissions are now unlocked.')
+      if (onUpdate) onUpdate()
+    } catch (err) {
+      console.error('Error resetting results:', err)
+      showMessage('error', err.response?.data?.error || 'Failed to reset results')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // Quick pick entry for live mode
   const handleQuickPickSubmit = async () => {
     if (!quickPlayer || !quickTeam) {
@@ -303,7 +372,7 @@ function AdminPanel({ onUpdate }) {
   if (!isAuthenticated) {
     return (
       <div className="bg-dark-100 rounded-lg shadow-md p-4 max-w-md mx-auto">
-        <h2 className="text-lg font-bold text-white mb-4">Admin Login</h2>
+        <h2 className="text-lg font-bold text-white mb-4">Commish Login</h2>
         <form onSubmit={handleLogin}>
           <div className="mb-4">
             <label htmlFor="password" className="block text-xs font-medium text-gray-300 mb-1">
@@ -312,6 +381,7 @@ function AdminPanel({ onUpdate }) {
             <input
               type="password"
               id="password"
+              autoComplete="off"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-3 py-2 text-sm bg-dark-200 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-accent text-white placeholder-gray-500"
@@ -332,7 +402,7 @@ function AdminPanel({ onUpdate }) {
 
   return (
     <div className="bg-dark-100 rounded-lg shadow-md p-3">
-      <h2 className="text-lg font-bold text-white mb-3">Admin Panel</h2>
+      <h2 className="text-lg font-bold text-white mb-3">Commish Panel</h2>
 
       {message.text && (
         <div
@@ -450,7 +520,7 @@ function AdminPanel({ onUpdate }) {
                   className="w-full px-3 py-2 text-sm bg-dark-100 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500 text-white"
                 >
                   <option value="">Select team...</option>
-                  {teams.map((team) => (
+                  {sortedTeams.map((team) => (
                     <option key={team.name} value={team.name}>
                       {team.name}
                     </option>
@@ -566,7 +636,7 @@ function AdminPanel({ onUpdate }) {
                       className="flex-1 px-2 py-1.5 text-xs bg-dark-100 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-accent text-white"
                     >
                       <option value="">Team {index + 1}...</option>
-                      {teams.map((team) => (
+                      {sortedTeams.map((team) => (
                         <option key={team.name} value={team.name}>
                           {team.name}
                         </option>
@@ -603,7 +673,7 @@ function AdminPanel({ onUpdate }) {
                       className="flex-1 px-2 py-1.5 text-xs bg-dark-100 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-accent text-white"
                     >
                       <option value="">Team {index + 1}...</option>
-                      {teams.map((team) => (
+                      {sortedTeams.map((team) => (
                         <option key={team.name} value={team.name}>
                           {team.name}
                         </option>
@@ -670,7 +740,7 @@ function AdminPanel({ onUpdate }) {
                   className="px-2 py-1.5 text-xs bg-dark-100 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-accent text-white"
                 >
                   <option value="">Actual team...</option>
-                  {teams.map((t) => (
+                  {sortedTeams.map((t) => (
                     <option key={t.name} value={t.name}>
                       {t.name}
                     </option>
@@ -728,6 +798,32 @@ function AdminPanel({ onUpdate }) {
             >
               Calculate Scores
             </button>
+          </div>
+
+          <div className="p-3 bg-red-950/40 border border-red-800 rounded-lg">
+            <h3 className="font-semibold text-sm text-red-300 mb-2">Fully Reset Results</h3>
+            <p className="text-xs text-gray-400 mb-3">
+              Deletes all scores and draft results, unlocks submissions, and clears trades. Submissions are preserved.
+            </p>
+            <button
+              onClick={handleResetResults}
+              disabled={loading}
+              className={`px-4 py-2 text-sm rounded-lg font-medium disabled:bg-gray-600 text-white transition-colors ${
+                resetConfirm
+                  ? 'bg-red-600 hover:bg-red-700 animate-pulse'
+                  : 'bg-red-900 hover:bg-red-700'
+              }`}
+            >
+              {resetConfirm ? 'Click again to confirm reset' : 'Reset All Results'}
+            </button>
+            {resetConfirm && (
+              <button
+                onClick={() => setResetConfirm(false)}
+                className="ml-2 px-3 py-2 text-xs text-gray-400 hover:text-white"
+              >
+                Cancel
+              </button>
+            )}
           </div>
 
           <div className="p-3 bg-dark-300 rounded-lg">

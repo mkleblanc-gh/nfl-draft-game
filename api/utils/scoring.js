@@ -16,18 +16,18 @@ export function calculateScore(submission, draftResults, tradeData = { teamsUp: 
   let tradePoints = 0
 
   // Get list of all players drafted in first round
-  const firstRoundPlayers = draftResults.map(result => result.player.toLowerCase())
+  const firstRoundPlayers = draftResults.map(result => result.player_name.toLowerCase())
 
   // Build maps for quick lookup
   const playerToPickMap = {} // player -> pick number
   const pickToPlayerAndTeamMap = {} // pick -> { player, team }
 
   draftResults.forEach(result => {
-    const playerLower = result.player.toLowerCase()
-    playerToPickMap[playerLower] = result.pick
-    pickToPlayerAndTeamMap[result.pick] = {
+    const playerLower = result.player_name.toLowerCase()
+    playerToPickMap[playerLower] = result.pick_number
+    pickToPlayerAndTeamMap[result.pick_number] = {
       player: playerLower,
-      team: result.team.toLowerCase()
+      team: result.team_name.toLowerCase()
     }
   })
 
@@ -63,23 +63,42 @@ export function calculateScore(submission, draftResults, tradeData = { teamsUp: 
     }
   })
 
-  // Calculate trade points
-  submission.tradesUp?.forEach(team => {
-    if (tradeData.teamsUp.some(t => t.toLowerCase() === team.toLowerCase())) {
-      tradePoints += 2
+  // Calculate trade points (field is trade_up/trade_down from Supabase)
+  // A team can appear multiple times in actual trades (traded multiple times).
+  // Award 2 pts per actual occurrence that the user predicted.
+  const tradesUp = submission.trade_up || submission.tradesUp || []
+  const tradesDown = submission.trade_down || submission.tradesDown || []
+
+  const countOccurrences = (arr) => {
+    const counts = {}
+    arr.forEach(t => {
+      const key = t.toLowerCase()
+      counts[key] = (counts[key] || 0) + 1
+    })
+    return counts
+  }
+
+  const actualUpCounts = countOccurrences(tradeData.teamsUp)
+  tradesUp.forEach(team => {
+    const key = team.toLowerCase()
+    if (actualUpCounts[key]) {
+      tradePoints += 2 * actualUpCounts[key]
     }
   })
 
-  submission.tradesDown?.forEach(team => {
-    if (tradeData.teamsDown.some(t => t.toLowerCase() === team.toLowerCase())) {
-      tradePoints += 2
+  const actualDownCounts = countOccurrences(tradeData.teamsDown)
+  tradesDown.forEach(team => {
+    const key = team.toLowerCase()
+    if (actualDownCounts[key]) {
+      tradePoints += 2 * actualDownCounts[key]
     }
   })
 
   const totalScore = firstRoundPoints + pickNumberPoints + teamPoints + tradePoints
 
   return {
-    name: submission.name,
+    email: submission.email,
+    name: submission.name || null,
     firstRoundPoints,
     pickNumberPoints,
     teamPoints,

@@ -38,11 +38,20 @@ export async function handler(event, context) {
 
     const submission = JSON.parse(event.body)
 
-    // Validate submission
-    if (!submission.name || !submission.picks || submission.picks.length !== 32) {
+    // Validate submission - email required, name optional
+    if (!submission.email || !submission.picks || submission.picks.length !== 32) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Invalid submission data' })
+        body: JSON.stringify({ error: 'Email and 32 picks are required' })
+      }
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(submission.email)) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: 'Please enter a valid email address' })
       }
     }
 

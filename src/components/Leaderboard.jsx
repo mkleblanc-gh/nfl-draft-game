@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
-import { getLeaderboard, getGameStatus } from '../utils/api'
+import { getLeaderboard, getGameStatus, getSubmissions } from '../utils/api'
 
 function Leaderboard() {
   const [scores, setScores] = useState([])
+  const [submissionList, setSubmissionList] = useState([]) // shown when scores not yet calculated
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [picksEntered, setPicksEntered] = useState(0)
@@ -40,6 +41,18 @@ function Leaderboard() {
       setPicksEntered(statusData.picksEntered || 0)
       setLastUpdated(new Date())
       setError('')
+
+      // If no scores yet, try to fetch submission list (only available when locked)
+      if (leaderboardData.length === 0) {
+        try {
+          const subData = await getSubmissions()
+          setSubmissionList(subData.submissions || [])
+        } catch {
+          setSubmissionList([])
+        }
+      } else {
+        setSubmissionList([])
+      }
     } catch (err) {
       console.error('Error fetching data:', err)
       if (!silent) setError('Failed to load leaderboard. Please try again.')
@@ -55,6 +68,13 @@ function Leaderboard() {
   const formatLastUpdated = () => {
     if (!lastUpdated) return ''
     return lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }
+
+  // Get display name: use name if provided, otherwise show email
+  const getDisplayName = (score) => {
+    if (score.name) return score.name
+    if (score.email) return score.email
+    return 'Anonymous'
   }
 
   if (loading) {
@@ -81,14 +101,32 @@ function Leaderboard() {
 
   if (scores.length === 0) {
     return (
-      <div className="bg-dark-100 rounded-lg shadow-md p-6 text-center">
-        <div className="text-lg text-gray-300 mb-2">No submissions yet</div>
-        <p className="text-gray-500 text-sm">Be the first to make your predictions!</p>
+      <div className="bg-dark-100 rounded-lg shadow-md p-4">
+        <h2 className="text-lg font-bold text-white mb-3">Leaderboard</h2>
+        {submissionList.length === 0 ? (
+          <div className="text-center py-4 text-gray-400">No submissions yet</div>
+        ) : (
+          <>
+            <div className="space-y-1">
+              {submissionList.map((sub, i) => (
+                <div key={sub.email || i} className="flex justify-between items-center px-3 py-2 bg-dark-200 rounded text-sm">
+                  <span className="text-white font-medium">{sub.name || sub.email}</span>
+                  <span className="text-gray-500 text-xs">
+                    {sub.created_at
+                      ? new Date(sub.created_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                      : ''}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     )
   }
 
   const hasScores = scores.some(s => s.totalScore > 0)
+  const topScore = hasScores ? scores[0]?.totalScore : 0
 
   return (
     <div className="bg-dark-100 rounded-lg shadow-md p-3">
@@ -137,33 +175,34 @@ function Leaderboard() {
         </div>
       )}
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto hidden md:block">
         <table className="w-full">
           <thead className="bg-dark-200">
             <tr>
               <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400">Rank</th>
               <th className="px-3 py-2 text-left text-xs font-semibold text-gray-400">Name</th>
+              <th className="px-3 py-2 text-center text-xs font-semibold text-gray-400">Total</th>
+              <th className="px-1 py-2 hidden md:table-cell"></th>
               <th className="px-3 py-2 text-center text-xs font-semibold text-gray-400 hidden md:table-cell">
-                1st Rd
+                Full match
               </th>
               <th className="px-3 py-2 text-center text-xs font-semibold text-gray-400 hidden md:table-cell">
-                Pick #
+                Player and #
               </th>
               <th className="px-3 py-2 text-center text-xs font-semibold text-gray-400 hidden md:table-cell">
-                Team
+                Player only
               </th>
               <th className="px-3 py-2 text-center text-xs font-semibold text-gray-400 hidden md:table-cell">
                 Trades
               </th>
-              <th className="px-3 py-2 text-center text-xs font-semibold text-gray-400">Total</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-dark-300">
             {scores.map((score, index) => {
-              const isWinner = hasScores && index === 0 && score.totalScore > 0
+              const isWinner = hasScores && score.totalScore > 0 && score.totalScore === topScore
               return (
                 <tr
-                  key={score.name}
+                  key={score.email || score.name || index}
                   className={`hover:bg-dark-200 ${isWinner ? 'bg-yellow-900/20' : ''}`}
                 >
                   <td className="px-3 py-2 text-sm">
@@ -174,24 +213,27 @@ function Leaderboard() {
                     )}
                   </td>
                   <td className="px-3 py-2">
-                    <div className="font-medium text-white text-sm">{score.name}</div>
-                  </td>
-                  <td className="px-3 py-2 text-center text-xs text-gray-400 hidden md:table-cell">
-                    {score.firstRoundPoints || 0}
-                  </td>
-                  <td className="px-3 py-2 text-center text-xs text-gray-400 hidden md:table-cell">
-                    {score.pickNumberPoints || 0}
-                  </td>
-                  <td className="px-3 py-2 text-center text-xs text-gray-400 hidden md:table-cell">
-                    {score.teamPoints || 0}
-                  </td>
-                  <td className="px-3 py-2 text-center text-xs text-gray-400 hidden md:table-cell">
-                    {score.tradePoints || 0}
+                    <div className="font-medium text-white text-sm">{getDisplayName(score)}</div>
                   </td>
                   <td className="px-3 py-2 text-center">
                     <span className="font-bold text-accent">
                       {score.totalScore || 0}
                     </span>
+                  </td>
+                  <td className="px-1 py-2 hidden md:table-cell">
+                    <div className="w-px h-5 bg-dark-300 mx-auto"></div>
+                  </td>
+                  <td className="px-3 py-2 text-center text-xs text-gray-400 hidden md:table-cell">
+                    {Math.round((score.teamPoints || 0) / 5)}
+                  </td>
+                  <td className="px-3 py-2 text-center text-xs text-gray-400 hidden md:table-cell">
+                    {Math.round((score.pickNumberPoints || 0) / 3)}
+                  </td>
+                  <td className="px-3 py-2 text-center text-xs text-gray-400 hidden md:table-cell">
+                    {score.firstRoundPoints || 0}
+                  </td>
+                  <td className="px-3 py-2 text-center text-xs text-gray-400 hidden md:table-cell">
+                    {Math.round((score.tradePoints || 0) / 2)}
                   </td>
                 </tr>
               )
@@ -200,39 +242,44 @@ function Leaderboard() {
         </table>
       </div>
 
-      {/* Mobile view - show breakdown */}
+      {/* Mobile view */}
       <div className="md:hidden mt-3 space-y-2">
-        {scores.map((score, index) => (
-          <div key={score.name} className="p-2 bg-dark-200 rounded-lg">
-            <div className="flex justify-between items-start mb-1">
-              <div>
-                <div className="font-medium text-white text-sm">{score.name}</div>
-                <div className="text-xs text-gray-500">Rank #{index + 1}</div>
+        {scores.map((score, index) => {
+          const isWinner = hasScores && score.totalScore > 0 && score.totalScore === topScore
+          return (
+            <div key={score.email || score.name || index} className={`rounded-lg overflow-hidden border ${isWinner ? 'border-yellow-700' : 'border-dark-300'}`}>
+              {/* Main row */}
+              <div className={`flex items-center justify-between px-3 py-2 ${isWinner ? 'bg-yellow-900/20' : 'bg-dark-200'}`}>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm w-5 shrink-0">
+                    {isWinner ? '🏆' : <span className="text-gray-400">{index + 1}</span>}
+                  </span>
+                  <span className="font-medium text-white text-sm">{getDisplayName(score)}</span>
+                </div>
+                <span className="font-bold text-accent text-base">{score.totalScore || 0}</span>
               </div>
-              <div className="font-bold text-accent">
-                {score.totalScore || 0}
+              {/* Detail strip */}
+              <div className="grid grid-cols-4 bg-dark-300 border-t border-dark-400">
+                <div className="text-center px-1 py-1.5 border-r border-dark-400">
+                  <div className="text-gray-500 text-[10px]">Full match</div>
+                  <div className="font-semibold text-gray-300 text-xs">{Math.round((score.teamPoints || 0) / 5)}</div>
+                </div>
+                <div className="text-center px-1 py-1.5 border-r border-dark-400">
+                  <div className="text-gray-500 text-[10px]">Player+#</div>
+                  <div className="font-semibold text-gray-300 text-xs">{Math.round((score.pickNumberPoints || 0) / 3)}</div>
+                </div>
+                <div className="text-center px-1 py-1.5 border-r border-dark-400">
+                  <div className="text-gray-500 text-[10px]">Player only</div>
+                  <div className="font-semibold text-gray-300 text-xs">{score.firstRoundPoints || 0}</div>
+                </div>
+                <div className="text-center px-1 py-1.5">
+                  <div className="text-gray-500 text-[10px]">Trades</div>
+                  <div className="font-semibold text-gray-300 text-xs">{Math.round((score.tradePoints || 0) / 2)}</div>
+                </div>
               </div>
             </div>
-            <div className="grid grid-cols-4 gap-1 text-xs text-gray-400">
-              <div className="text-center">
-                <div>1st Rd</div>
-                <div className="font-semibold text-gray-300">{score.firstRoundPoints || 0}</div>
-              </div>
-              <div className="text-center">
-                <div>Pick #</div>
-                <div className="font-semibold text-gray-300">{score.pickNumberPoints || 0}</div>
-              </div>
-              <div className="text-center">
-                <div>Team</div>
-                <div className="font-semibold text-gray-300">{score.teamPoints || 0}</div>
-              </div>
-              <div className="text-center">
-                <div>Trades</div>
-                <div className="font-semibold text-gray-300">{score.tradePoints || 0}</div>
-              </div>
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

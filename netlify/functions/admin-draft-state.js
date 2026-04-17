@@ -1,4 +1,4 @@
-import { updateSetting } from '../../api/utils/supabase.js'
+import { getDraftResults, getActualTrades } from '../../api/utils/supabase.js'
 
 function verifyPassword(password) {
   return password === process.env.ADMIN_PASSWORD
@@ -10,7 +10,7 @@ export async function handler(event, context) {
   }
 
   try {
-    const { password, locked } = JSON.parse(event.body)
+    const { password } = JSON.parse(event.body)
 
     if (!verifyPassword(password)) {
       return {
@@ -19,17 +19,21 @@ export async function handler(event, context) {
       }
     }
 
-    await updateSetting('submission_locked', locked ? 'true' : 'false')
+    const [draftResults, actualTrades] = await Promise.all([
+      getDraftResults(),
+      getActualTrades()
+    ])
+
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ success: true, message: `Submissions ${locked ? 'locked' : 'unlocked'}` })
+      body: JSON.stringify({ draftResults, actualTrades })
     }
   } catch (error) {
-    console.error('Error toggling lock:', error)
+    console.error('Error fetching draft state:', error)
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message || 'Failed to toggle lock' })
+      body: JSON.stringify({ error: error.message || 'Failed to fetch draft state' })
     }
   }
 }

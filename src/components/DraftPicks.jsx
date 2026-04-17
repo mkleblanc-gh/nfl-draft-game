@@ -56,12 +56,19 @@ const DraftPicks = forwardRef(function DraftPicks({ picks, onPickChange, teamSel
     setShowDropdown(newShowDropdown)
   }
 
-  const getFilteredPlayers = (searchTerm) => {
+  const getFilteredPlayers = (searchTerm, currentIndex) => {
     if (!searchTerm) return []
+    const selectedNames = new Set(
+      picks
+        .filter((p, i) => p !== null && i !== currentIndex)
+        .map(p => p.name)
+    )
     return players.filter(player =>
-      player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      player.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      player.college.toLowerCase().includes(searchTerm.toLowerCase())
+      !selectedNames.has(player.name) && (
+        player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        player.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        player.college.toLowerCase().includes(searchTerm.toLowerCase())
+      )
     ).slice(0, 10)
   }
 
@@ -80,11 +87,18 @@ const DraftPicks = forwardRef(function DraftPicks({ picks, onPickChange, teamSel
 
   const selectTeam = (index, teamName) => {
     if (onTeamChange) {
-      onTeamChange(index, teamName)
+      // Normalize: if selecting the original/default team, clear the custom selection
+      onTeamChange(index, teamName === teams[index]?.name ? null : teamName)
     }
     const newShowTeamDropdown = [...showTeamDropdown]
     newShowTeamDropdown[index] = false
     setShowTeamDropdown(newShowTeamDropdown)
+  }
+
+  const resetTeam = (index) => {
+    if (onTeamChange) {
+      onTeamChange(index, null)
+    }
   }
 
   const getSelectedTeam = (index) => {
@@ -98,6 +112,8 @@ const DraftPicks = forwardRef(function DraftPicks({ picks, onPickChange, teamSel
     const selectedName = getSelectedTeam(index)
     return selectedName || teams[index]?.name || ''
   }
+
+  const sortedTeams = [...teams].sort((a, b) => a.name.localeCompare(b.name))
 
   if (loading) {
     return <div className="text-center py-4 text-gray-400">Loading players and teams...</div>
@@ -129,23 +145,35 @@ const DraftPicks = forwardRef(function DraftPicks({ picks, onPickChange, teamSel
                   <div className="text-xs font-semibold text-white">
                     #{index + 1}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => toggleTeamDropdown(index)}
-                    className={`flex items-center gap-0.5 text-xs max-w-[100px] text-left ${
-                      teamSelections && teamSelections[index] && teamSelections[index] !== team.name
-                        ? 'text-yellow-400 font-medium'
-                        : 'text-gray-400'
-                    } hover:text-white`}
-                    title="Click to change team (if you think there's a trade)"
-                  >
-                    <span className="truncate">{getSelectedTeam(index)}</span>
-                    <span className="flex-shrink-0">▾</span>
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => toggleTeamDropdown(index)}
+                      className={`flex items-center gap-0.5 text-xs text-left ${
+                        teamSelections && teamSelections[index] && teamSelections[index] !== team.name
+                          ? 'text-yellow-400 font-medium'
+                          : 'text-gray-400'
+                      } hover:text-white`}
+                      title="Click to change team (if you think there's a trade)"
+                    >
+                      <span>{getSelectedTeam(index)}</span>
+                      <span className="flex-shrink-0">▾</span>
+                    </button>
+                    {teamSelections && teamSelections[index] && teamSelections[index] !== team.name && (
+                      <button
+                        type="button"
+                        onClick={() => resetTeam(index)}
+                        className="text-gray-500 hover:text-gray-300 text-xs leading-none"
+                        title={`Reset to ${team.name}`}
+                      >
+                        ↺
+                      </button>
+                    )}
+                  </div>
                 </div>
                 {showTeamDropdown[index] && (
                   <div className="absolute z-30 left-0 top-full mt-1 w-48 bg-dark-100 border border-dark-300 rounded shadow-lg max-h-48 overflow-y-auto">
-                    {teams.map((t) => (
+                    {sortedTeams.map((t) => (
                       <button
                         key={t.name}
                         type="button"
@@ -181,8 +209,8 @@ const DraftPicks = forwardRef(function DraftPicks({ picks, onPickChange, teamSel
 
               {showDropdown[index] && (
                 <div className="absolute z-20 w-full mt-1 bg-dark-100 border border-dark-300 rounded shadow-lg max-h-48 overflow-y-auto">
-                  {getFilteredPlayers(searchTerms[index]).length > 0 ? (
-                    getFilteredPlayers(searchTerms[index]).map((player) => (
+                  {getFilteredPlayers(searchTerms[index], index).length > 0 ? (
+                    getFilteredPlayers(searchTerms[index], index).map((player) => (
                       <button
                         key={player.name}
                         onClick={() => selectPlayer(index, player)}

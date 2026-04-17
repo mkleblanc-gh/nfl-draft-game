@@ -12,7 +12,7 @@ function TradePredictions({ tradesUp, tradesDown, onTradeChange }) {
   const fetchTeams = async () => {
     try {
       const teamsData = await getTeams()
-      setTeams(teamsData)
+      setTeams([...teamsData].sort((a, b) => a.name.localeCompare(b.name)))
     } catch (error) {
       console.error('Error fetching teams:', error)
     } finally {
@@ -38,21 +38,28 @@ function TradePredictions({ tradesUp, tradesDown, onTradeChange }) {
             Select teams that will trade UP to get a higher pick
           </p>
           <div className="space-y-2">
-            {[0, 1, 2].map((index) => (
-              <select
-                key={index}
-                value={tradesUp[index]}
-                onChange={(e) => onTradeChange('up', index, e.target.value)}
-                className="w-full px-2 py-1.5 text-xs bg-dark-100 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-accent text-white"
-              >
-                <option value="">Team {index + 1}...</option>
-                {teams.map((team) => (
-                  <option key={team.name} value={team.name}>
-                    {team.name}
-                  </option>
-                ))}
-              </select>
-            ))}
+            {[0, 1, 2].map((index) => {
+              const otherUpSelections = new Set(
+                tradesUp.filter((t, i) => t && i !== index)
+              )
+              return (
+                <select
+                  key={index}
+                  value={tradesUp[index]}
+                  onChange={(e) => onTradeChange('up', index, e.target.value)}
+                  className="w-full px-2 py-1.5 text-xs bg-dark-100 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-accent text-white"
+                >
+                  <option value="">Team {index + 1}...</option>
+                  {teams
+                    .filter((team) => !otherUpSelections.has(team.name))
+                    .map((team) => (
+                      <option key={team.name} value={team.name}>
+                        {team.name}
+                      </option>
+                    ))}
+                </select>
+              )
+            })}
           </div>
         </div>
 
@@ -65,21 +72,28 @@ function TradePredictions({ tradesUp, tradesDown, onTradeChange }) {
             Select teams that will trade DOWN to get a lower pick
           </p>
           <div className="space-y-2">
-            {[0, 1, 2].map((index) => (
-              <select
-                key={index}
-                value={tradesDown[index]}
-                onChange={(e) => onTradeChange('down', index, e.target.value)}
-                className="w-full px-2 py-1.5 text-xs bg-dark-100 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-accent text-white"
-              >
-                <option value="">Team {index + 1}...</option>
-                {teams.map((team) => (
-                  <option key={team.name} value={team.name}>
-                    {team.name}
-                  </option>
-                ))}
-              </select>
-            ))}
+            {[0, 1, 2].map((index) => {
+              const otherDownSelections = new Set(
+                tradesDown.filter((t, i) => t && i !== index)
+              )
+              return (
+                <select
+                  key={index}
+                  value={tradesDown[index]}
+                  onChange={(e) => onTradeChange('down', index, e.target.value)}
+                  className="w-full px-2 py-1.5 text-xs bg-dark-100 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-accent text-white"
+                >
+                  <option value="">Team {index + 1}...</option>
+                  {teams
+                    .filter((team) => !otherDownSelections.has(team.name))
+                    .map((team) => (
+                      <option key={team.name} value={team.name}>
+                        {team.name}
+                      </option>
+                    ))}
+                </select>
+              )
+            })}
           </div>
         </div>
       </div>
