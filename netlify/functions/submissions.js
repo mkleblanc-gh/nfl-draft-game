@@ -1,4 +1,4 @@
-import { saveSubmission, getLatestSubmissionPerEmail, getDraftResults, getGameSettings } from '../../api/utils/supabase.js'
+import { saveSubmission, getLatestSubmissionPerEmail, getDraftResults, getGameSettings, getActualTrades } from '../../api/utils/supabase.js'
 
 export async function handler(event, context) {
   if (event.httpMethod === 'GET') {
@@ -7,14 +7,15 @@ export async function handler(event, context) {
       if (settings.submission_locked !== 'true') {
         return { statusCode: 403, body: JSON.stringify({ error: 'Submissions are not yet visible' }) }
       }
-      const [submissions, draftResults] = await Promise.all([
+      const [submissions, draftResults, actualTrades] = await Promise.all([
         getLatestSubmissionPerEmail(),
-        getDraftResults()
+        getDraftResults(),
+        getActualTrades()
       ])
       return {
         statusCode: 200,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ submissions, picksEntered: draftResults.length, draftResults })
+        body: JSON.stringify({ submissions, picksEntered: draftResults.length, draftResults, actualTrades })
       }
     } catch (error) {
       return { statusCode: 500, body: JSON.stringify({ error: 'Failed to fetch submissions' }) }

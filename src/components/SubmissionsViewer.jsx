@@ -5,6 +5,7 @@ function SubmissionsViewer() {
   const [submissions, setSubmissions] = useState([])
   const [picksEntered, setPicksEntered] = useState(0)
   const [draftResults, setDraftResults] = useState([]) // actual draft results entered so far
+  const [actualTrades, setActualTrades] = useState({ tradesUp: [], tradesDown: [] })
   const [teams, setTeams] = useState([]) // ordered by pick_number, used as default team fallback
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -27,6 +28,7 @@ function SubmissionsViewer() {
       setSubmissions(subs)
       setPicksEntered(subData.picksEntered || 0)
       setDraftResults(subData.draftResults || [])
+      setActualTrades(subData.actualTrades || { tradesUp: [], tradesDown: [] })
       setTeams(teamsData)
       setError('')
     } catch (err) {
@@ -66,10 +68,38 @@ function SubmissionsViewer() {
 
   const getTotalScore = (sub) => {
     const picks = sub.picks || []
-    return picks.reduce((sum, pick, i) => {
+    const pickPoints = picks.reduce((sum, pick, i) => {
       const score = getPickScore(pick, i)
       return sum + (score ? score.points : 0)
     }, 0)
+
+    const countOccurrences = (arr) => {
+      const counts = {}
+      arr.forEach(t => {
+        const key = t.toLowerCase()
+        counts[key] = (counts[key] || 0) + 1
+      })
+      return counts
+    }
+
+    const actualUpCounts = countOccurrences(actualTrades.tradesUp || [])
+    const actualDownCounts = countOccurrences(actualTrades.tradesDown || [])
+
+    let tradePoints = 0
+    ;(sub.trade_up || []).forEach(team => {
+      if (team) {
+        const count = actualUpCounts[team.toLowerCase()] || 0
+        tradePoints += 2 * count
+      }
+    })
+    ;(sub.trade_down || []).forEach(team => {
+      if (team) {
+        const count = actualDownCounts[team.toLowerCase()] || 0
+        tradePoints += 2 * count
+      }
+    })
+
+    return pickPoints + tradePoints
   }
 
   const toggleExpanded = (index) => {
