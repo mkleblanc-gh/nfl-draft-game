@@ -8,7 +8,7 @@ import AdminPanel from './components/AdminPanel'
 import { getGameStatus, getPlayers, getTeams } from './utils/api'
 
 function App() {
-  const [currentView, setCurrentView] = useState('predict') // 'predict', 'leaderboard', 'admin'
+  const [currentView, setCurrentView] = useState('predict') // 'predict', 'leaderboard', 'rules', 'admin'
   const [picks, setPicks] = useState(Array(32).fill(null))
   const [teamSelections, setTeamSelections] = useState(Array(32).fill(null)) // Custom team for each pick slot
   const [tradesUp, setTradesUp] = useState(['', '', ''])
@@ -101,13 +101,6 @@ function App() {
             <h1 className="text-2xl md:text-3xl font-bold">NFL Draft Game 2026</h1>
             <p className="mt-0.5 text-sm text-gray-400">Predict all 32 first-round picks, ya dog</p>
           </div>
-          <ul className="text-xs space-y-0.5 text-gray-500 shrink-0">
-            <li>• <span className="text-yellow-400 font-medium">5 pts</span> — correct player, pick number, and team</li>
-            <li>• <span className="text-blue-400 font-medium">3 pts</span> — correct player and pick number</li>
-            <li>• <span className="text-gray-300 font-medium">1 pt</span> — player drafted in first round (wrong position)</li>
-            <li>• <span className="text-green-400 font-medium">2 pts</span> — correct team that trades (up or down)</li>
-            <li>• Winner takes all. Ties get split.</li>
-          </ul>
         </div>
       </header>
 
@@ -136,6 +129,16 @@ function App() {
               Leaderboard
             </button>
             <button
+              onClick={() => setCurrentView('rules')}
+              className={`px-3 md:px-5 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                currentView === 'rules'
+                  ? 'bg-secondary text-white'
+                  : 'text-gray-400 hover:bg-dark-200'
+              }`}
+            >
+              Rules
+            </button>
+            <button
               onClick={() => setCurrentView('admin')}
               className={`px-3 md:px-5 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 currentView === 'admin'
@@ -143,7 +146,7 @@ function App() {
                   : 'text-gray-400 hover:bg-dark-200'
               }`}
             >
-              Admin
+              Commish
             </button>
           </div>
         </div>
@@ -194,6 +197,33 @@ function App() {
 
         {currentView === 'leaderboard' && (
           <Leaderboard />
+        )}
+
+        {currentView === 'rules' && (
+          <div className="bg-dark-100 rounded-lg shadow-md p-4 max-w-lg mx-auto">
+            <h2 className="text-lg font-bold text-white mb-4">Scoring Rules</h2>
+            <ul className="space-y-3 text-sm">
+              <li className="flex items-start gap-3">
+                <span className="text-yellow-400 font-bold text-base shrink-0">5 pts</span>
+                <span className="text-gray-300">Correct player, pick number, <em>and</em> team</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-blue-400 font-bold text-base shrink-0">3 pts</span>
+                <span className="text-gray-300">Correct player and pick number (wrong team)</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-gray-300 font-bold text-base shrink-0">1 pt</span>
+                <span className="text-gray-300">Player was drafted in the first round (wrong position)</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-green-400 font-bold text-base shrink-0">2 pts</span>
+                <span className="text-gray-300">Correct team predicted to trade up or down</span>
+              </li>
+            </ul>
+            <div className="mt-4 pt-4 border-t border-dark-300 text-xs text-gray-500">
+              Winner takes all. Ties get split.
+            </div>
+          </div>
         )}
 
         {currentView === 'admin' && (
