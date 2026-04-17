@@ -64,18 +64,33 @@ export function calculateScore(submission, draftResults, tradeData = { teamsUp: 
   })
 
   // Calculate trade points (field is trade_up/trade_down from Supabase)
+  // A team can appear multiple times in actual trades (traded multiple times).
+  // Award 2 pts per actual occurrence that the user predicted.
   const tradesUp = submission.trade_up || submission.tradesUp || []
   const tradesDown = submission.trade_down || submission.tradesDown || []
 
+  const countOccurrences = (arr) => {
+    const counts = {}
+    arr.forEach(t => {
+      const key = t.toLowerCase()
+      counts[key] = (counts[key] || 0) + 1
+    })
+    return counts
+  }
+
+  const actualUpCounts = countOccurrences(tradeData.teamsUp)
   tradesUp.forEach(team => {
-    if (tradeData.teamsUp.some(t => t.toLowerCase() === team.toLowerCase())) {
-      tradePoints += 2
+    const key = team.toLowerCase()
+    if (actualUpCounts[key]) {
+      tradePoints += 2 * actualUpCounts[key]
     }
   })
 
+  const actualDownCounts = countOccurrences(tradeData.teamsDown)
   tradesDown.forEach(team => {
-    if (tradeData.teamsDown.some(t => t.toLowerCase() === team.toLowerCase())) {
-      tradePoints += 2
+    const key = team.toLowerCase()
+    if (actualDownCounts[key]) {
+      tradePoints += 2 * actualDownCounts[key]
     }
   })
 
