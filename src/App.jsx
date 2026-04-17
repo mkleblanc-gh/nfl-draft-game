@@ -27,9 +27,6 @@ function App() {
     try {
       const status = await getGameStatus()
       setIsLocked(status.locked)
-      if (status.locked) {
-        setCurrentView(v => v === 'predict' ? 'leaderboard' : v)
-      }
     } catch (error) {
       console.error('Error fetching game status:', error)
     } finally {
@@ -102,7 +99,7 @@ function App() {
         <div className="container mx-auto px-3 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div className="text-center md:text-left">
             <h1 className="text-2xl md:text-3xl font-bold">NFL Draft Game 2026</h1>
-            <p className="mt-0.5 text-sm text-gray-400">Predict all 32 first-round picks and win!</p>
+            <p className="mt-0.5 text-sm text-gray-400">Predict all 32 first-round picks, ya dog</p>
           </div>
           <ul className="text-xs space-y-0.5 text-gray-500 shrink-0">
             <li>• <span className="text-yellow-400 font-medium">5 pts</span> — correct player, pick number, and team</li>

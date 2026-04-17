@@ -126,6 +126,7 @@ function Leaderboard() {
   }
 
   const hasScores = scores.some(s => s.totalScore > 0)
+  const topScore = hasScores ? scores[0]?.totalScore : 0
 
   return (
     <div className="bg-dark-100 rounded-lg shadow-md p-3">
@@ -198,7 +199,7 @@ function Leaderboard() {
           </thead>
           <tbody className="divide-y divide-dark-300">
             {scores.map((score, index) => {
-              const isWinner = hasScores && index === 0 && score.totalScore > 0
+              const isWinner = hasScores && score.totalScore > 0 && score.totalScore === topScore
               return (
                 <tr
                   key={score.email || score.name || index}
@@ -223,16 +224,16 @@ function Leaderboard() {
                     <div className="w-px h-5 bg-dark-300 mx-auto"></div>
                   </td>
                   <td className="px-3 py-2 text-center text-xs text-gray-400 hidden md:table-cell">
-                    {score.teamPoints || 0}
+                    {Math.round((score.teamPoints || 0) / 5)}
                   </td>
                   <td className="px-3 py-2 text-center text-xs text-gray-400 hidden md:table-cell">
-                    {score.pickNumberPoints || 0}
+                    {Math.round((score.pickNumberPoints || 0) / 3)}
                   </td>
                   <td className="px-3 py-2 text-center text-xs text-gray-400 hidden md:table-cell">
                     {score.firstRoundPoints || 0}
                   </td>
                   <td className="px-3 py-2 text-center text-xs text-gray-400 hidden md:table-cell">
-                    {score.tradePoints || 0}
+                    {Math.round((score.tradePoints || 0) / 2)}
                   </td>
                 </tr>
               )
@@ -244,7 +245,7 @@ function Leaderboard() {
       {/* Mobile view */}
       <div className="md:hidden mt-3 space-y-2">
         {scores.map((score, index) => {
-          const isWinner = hasScores && index === 0 && score.totalScore > 0
+          const isWinner = hasScores && score.totalScore > 0 && score.totalScore === topScore
           return (
             <div key={score.email || score.name || index} className={`rounded-lg overflow-hidden border ${isWinner ? 'border-yellow-700' : 'border-dark-300'}`}>
               {/* Main row */}
@@ -261,11 +262,11 @@ function Leaderboard() {
               <div className="grid grid-cols-4 bg-dark-300 border-t border-dark-400">
                 <div className="text-center px-1 py-1.5 border-r border-dark-400">
                   <div className="text-gray-500 text-[10px]">Full match</div>
-                  <div className="font-semibold text-gray-300 text-xs">{score.teamPoints || 0}</div>
+                  <div className="font-semibold text-gray-300 text-xs">{Math.round((score.teamPoints || 0) / 5)}</div>
                 </div>
                 <div className="text-center px-1 py-1.5 border-r border-dark-400">
                   <div className="text-gray-500 text-[10px]">Player+#</div>
-                  <div className="font-semibold text-gray-300 text-xs">{score.pickNumberPoints || 0}</div>
+                  <div className="font-semibold text-gray-300 text-xs">{Math.round((score.pickNumberPoints || 0) / 3)}</div>
                 </div>
                 <div className="text-center px-1 py-1.5 border-r border-dark-400">
                   <div className="text-gray-500 text-[10px]">Player only</div>
@@ -273,7 +274,7 @@ function Leaderboard() {
                 </div>
                 <div className="text-center px-1 py-1.5">
                   <div className="text-gray-500 text-[10px]">Trades</div>
-                  <div className="font-semibold text-gray-300 text-xs">{score.tradePoints || 0}</div>
+                  <div className="font-semibold text-gray-300 text-xs">{Math.round((score.tradePoints || 0) / 2)}</div>
                 </div>
               </div>
             </div>
