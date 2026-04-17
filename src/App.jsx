@@ -160,15 +160,6 @@ function App() {
 
         {currentView === 'predict' && !isLocked && (
           <div className="space-y-4">
-            {/* Auto-fill button for testing */}
-            <div className="flex justify-end">
-              <button
-                onClick={handleAutoFill}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-lg transition-colors"
-              >
-                Auto-Fill (Testing)
-              </button>
-            </div>
             <DraftPicks
               ref={draftPicksRef}
               picks={picks}
