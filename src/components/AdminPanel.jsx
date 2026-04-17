@@ -610,17 +610,10 @@ function AdminPanel({ onUpdate }) {
       {/* Draft Results Tab */}
       {activeTab === 'results' && (
         <form onSubmit={handleSubmitResults} className="space-y-3">
-          <div className="flex justify-between items-center mb-3">
+          <div className="mb-3">
             <p className="text-xs text-gray-400">
               Enter the actual draft results below. Scores will be calculated automatically.
             </p>
-            <button
-              type="button"
-              onClick={handleAutoFill}
-              className="px-2 py-1 text-xs bg-yellow-600 hover:bg-yellow-700 text-white rounded"
-            >
-              Auto-Fill (Test)
-            </button>
           </div>
 
           {/* Actual Trades Section */}
