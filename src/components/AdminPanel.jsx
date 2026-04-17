@@ -372,7 +372,7 @@ function AdminPanel({ onUpdate }) {
   if (!isAuthenticated) {
     return (
       <div className="bg-dark-100 rounded-lg shadow-md p-4 max-w-md mx-auto">
-        <h2 className="text-lg font-bold text-white mb-4">Admin Login</h2>
+        <h2 className="text-lg font-bold text-white mb-4">Commish Login</h2>
         <form onSubmit={handleLogin}>
           <div className="mb-4">
             <label htmlFor="password" className="block text-xs font-medium text-gray-300 mb-1">
@@ -402,7 +402,7 @@ function AdminPanel({ onUpdate }) {
 
   return (
     <div className="bg-dark-100 rounded-lg shadow-md p-3">
-      <h2 className="text-lg font-bold text-white mb-3">Admin Panel</h2>
+      <h2 className="text-lg font-bold text-white mb-3">Commish Panel</h2>
 
       {message.text && (
         <div

@@ -18,7 +18,13 @@ function SubmissionsViewer() {
     try {
       setLoading(true)
       const [subData, teamsData] = await Promise.all([getSubmissions(), getTeams()])
-      setSubmissions(subData.submissions || [])
+      const subs = subData.submissions || []
+      subs.sort((a, b) => {
+        const nameA = (a.name || a.email || '').toLowerCase()
+        const nameB = (b.name || b.email || '').toLowerCase()
+        return nameA.localeCompare(nameB)
+      })
+      setSubmissions(subs)
       setPicksEntered(subData.picksEntered || 0)
       setDraftResults(subData.draftResults || [])
       setTeams(teamsData)
