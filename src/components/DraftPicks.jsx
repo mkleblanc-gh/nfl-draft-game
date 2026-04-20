@@ -1,6 +1,7 @@
 import { useState, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { getPlayers, getTeams } from '../utils/api'
 import { getTeamLogoUrl } from '../utils/teamLogos'
+import { NFL_TEAMS } from '../utils/nflTeams'
 
 const DraftPicks = forwardRef(function DraftPicks({ picks, onPickChange, teamSelections, onTeamChange }, ref) {
   const [players, setPlayers] = useState([])
@@ -113,7 +114,6 @@ const DraftPicks = forwardRef(function DraftPicks({ picks, onPickChange, teamSel
     return selectedName || teams[index]?.name || ''
   }
 
-  const sortedTeams = [...teams].sort((a, b) => a.name.localeCompare(b.name))
 
   if (loading) {
     return <div className="text-center py-4 text-gray-400">Loading players and teams...</div>
@@ -173,16 +173,16 @@ const DraftPicks = forwardRef(function DraftPicks({ picks, onPickChange, teamSel
                 </div>
                 {showTeamDropdown[index] && (
                   <div className="absolute z-30 left-0 top-full mt-1 w-48 bg-dark-100 border border-dark-300 rounded shadow-lg max-h-48 overflow-y-auto">
-                    {sortedTeams.map((t) => (
+                    {NFL_TEAMS.map((t) => (
                       <button
-                        key={t.name}
+                        key={t}
                         type="button"
-                        onClick={() => selectTeam(index, t.name)}
+                        onClick={() => selectTeam(index, t)}
                         className={`w-full text-left px-2 py-1.5 text-xs hover:bg-dark-200 ${
-                          getSelectedTeam(index) === t.name ? 'bg-dark-300 text-accent' : 'text-white'
+                          getSelectedTeam(index) === t ? 'bg-dark-300 text-accent' : 'text-white'
                         }`}
                       >
-                        {t.name}
+                        {t}
                       </button>
                     ))}
                   </div>

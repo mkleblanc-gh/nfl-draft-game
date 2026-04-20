@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { submitDraftResults, toggleLock, calculateScores, getTeams, getPlayers, getDraftState, resetResults } from '../utils/api'
+import { NFL_TEAMS } from '../utils/nflTeams'
 
 function AdminPanel({ onUpdate }) {
   const [password, setPassword] = useState('')
@@ -49,7 +50,6 @@ function AdminPanel({ onUpdate }) {
     fetchData()
   }, [])
 
-  const sortedTeams = [...teams].sort((a, b) => a.name.localeCompare(b.name))
 
   const fetchData = async () => {
     try {
@@ -520,9 +520,9 @@ function AdminPanel({ onUpdate }) {
                   className="w-full px-3 py-2 text-sm bg-dark-100 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500 text-white"
                 >
                   <option value="">Select team...</option>
-                  {sortedTeams.map((team) => (
-                    <option key={team.name} value={team.name}>
-                      {team.name}
+                  {NFL_TEAMS.map((team) => (
+                    <option key={team} value={team}>
+                      {team}
                     </option>
                   ))}
                 </select>
@@ -629,9 +629,9 @@ function AdminPanel({ onUpdate }) {
                       className="flex-1 px-2 py-1.5 text-xs bg-dark-100 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-accent text-white"
                     >
                       <option value="">Team {index + 1}...</option>
-                      {sortedTeams.map((team) => (
-                        <option key={team.name} value={team.name}>
-                          {team.name}
+                      {NFL_TEAMS.map((team) => (
+                        <option key={team} value={team}>
+                          {team}
                         </option>
                       ))}
                     </select>
@@ -666,9 +666,9 @@ function AdminPanel({ onUpdate }) {
                       className="flex-1 px-2 py-1.5 text-xs bg-dark-100 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-accent text-white"
                     >
                       <option value="">Team {index + 1}...</option>
-                      {sortedTeams.map((team) => (
-                        <option key={team.name} value={team.name}>
-                          {team.name}
+                      {NFL_TEAMS.map((team) => (
+                        <option key={team} value={team}>
+                          {team}
                         </option>
                       ))}
                     </select>
@@ -733,9 +733,9 @@ function AdminPanel({ onUpdate }) {
                   className="px-2 py-1.5 text-xs bg-dark-100 border border-dark-300 rounded focus:outline-none focus:ring-1 focus:ring-accent text-white"
                 >
                   <option value="">Actual team...</option>
-                  {sortedTeams.map((t) => (
-                    <option key={t.name} value={t.name}>
-                      {t.name}
+                  {NFL_TEAMS.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
                     </option>
                   ))}
                 </select>
