@@ -1,36 +1,7 @@
-import { useState, useEffect } from 'react'
-import { getTeams } from '../utils/api'
+import { NFL_TEAMS } from '../utils/nflTeams'
 
 function TradePredictions({ tradesUp, tradesDown, onTradeChange }) {
-  const [teams, setTeams] = useState([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetchTeams()
-  }, [])
-
-  const fetchTeams = async () => {
-    try {
-      const teamsData = await getTeams()
-      // Deduplicate by name (teams table has one row per pick slot, so a team
-      // with multiple picks appears more than once)
-      const seen = new Set()
-      const unique = teamsData.filter(t => {
-        if (seen.has(t.name)) return false
-        seen.add(t.name)
-        return true
-      })
-      setTeams([...unique].sort((a, b) => a.name.localeCompare(b.name)))
-    } catch (error) {
-      console.error('Error fetching teams:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (loading) {
-    return <div className="text-center py-4 text-gray-400">Loading teams...</div>
-  }
+  const teams = NFL_TEAMS
 
   return (
     <div className="bg-dark-100 rounded-lg shadow-md p-3">
@@ -59,10 +30,10 @@ function TradePredictions({ tradesUp, tradesDown, onTradeChange }) {
                 >
                   <option value="">Team {index + 1}...</option>
                   {teams
-                    .filter((team) => !otherUpSelections.has(team.name))
+                    .filter((team) => !otherUpSelections.has(team))
                     .map((team) => (
-                      <option key={team.name} value={team.name}>
-                        {team.name}
+                      <option key={team} value={team}>
+                        {team}
                       </option>
                     ))}
                 </select>
@@ -93,10 +64,10 @@ function TradePredictions({ tradesUp, tradesDown, onTradeChange }) {
                 >
                   <option value="">Team {index + 1}...</option>
                   {teams
-                    .filter((team) => !otherDownSelections.has(team.name))
+                    .filter((team) => !otherDownSelections.has(team))
                     .map((team) => (
-                      <option key={team.name} value={team.name}>
-                        {team.name}
+                      <option key={team} value={team}>
+                        {team}
                       </option>
                     ))}
                 </select>
