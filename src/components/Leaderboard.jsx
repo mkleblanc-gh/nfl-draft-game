@@ -187,7 +187,7 @@ function Leaderboard() {
                 Full match
               </th>
               <th className="px-3 py-2 text-center text-xs font-semibold text-gray-400 hidden md:table-cell">
-                Player and #
+                Player + 1
               </th>
               <th className="px-3 py-2 text-center text-xs font-semibold text-gray-400 hidden md:table-cell">
                 Player only
@@ -265,7 +265,7 @@ function Leaderboard() {
                   <div className="font-semibold text-gray-300 text-xs">{Math.round((score.teamPoints || 0) / 5)}</div>
                 </div>
                 <div className="text-center px-1 py-1.5 border-r border-dark-400">
-                  <div className="text-gray-500 text-[10px]">Player+#</div>
+                  <div className="text-gray-500 text-[10px]">Player + 1</div>
                   <div className="font-semibold text-gray-300 text-xs">{Math.round((score.pickNumberPoints || 0) / 3)}</div>
                 </div>
                 <div className="text-center px-1 py-1.5 border-r border-dark-400">

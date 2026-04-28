@@ -2,12 +2,13 @@
  * Calculate scores for a submission based on actual draft results
  *
  * Scoring rules:
- * - 1 point for each player picked who is drafted in the first round
- * - 3 points for correct player and pick number (any team)
- * - 5 points for correct player + pick number + team
- * - 2 points for each team correctly predicted in trades (up or down)
+ * - 5 points: correct player + pick number + team
+ * - 3 points: correct player + pick number (wrong team)
+ * - 3 points: correct player + team (wrong pick number)
+ * - 1 point: player drafted in first round (wrong position and wrong team)
+ * - 2 points per occurrence: team correctly predicted to trade up or down
  *
- * Note: Points don't stack. Getting player+pick+team = 5 points total, not 1+3+5
+ * Note: Points don't stack — highest matching tier only.
  */
 export function calculateScore(submission, draftResults, tradeData = { teamsUp: [], teamsDown: [] }) {
   let firstRoundPoints = 0
@@ -55,11 +56,20 @@ export function calculateScore(submission, draftResults, tradeData = { teamsUp: 
       // Perfect match: correct player + pick + team = 5 points
       teamPoints += 5
     } else if (actualPlayer === predictedPlayerLower) {
-      // Correct player and pick number (but different team) = 3 points
+      // Correct player and pick number (wrong team) = 3 points
       pickNumberPoints += 3
     } else if (wasPickedInFirstRound) {
-      // Player was drafted in first round (but wrong position) = 1 point
-      firstRoundPoints += 1
+      // Player drafted in first round at a different position
+      // Check if the predicted team also matches where they were actually drafted
+      const actualPickForPlayer = playerToPickMap[predictedPlayerLower]
+      const actualResultForPlayer = pickToPlayerAndTeamMap[actualPickForPlayer]
+      if (actualResultForPlayer && actualResultForPlayer.team === predictedTeam) {
+        // Correct player + correct team, wrong position = 3 points
+        pickNumberPoints += 3
+      } else {
+        // Correct player in first round, wrong position and wrong team = 1 point
+        firstRoundPoints += 1
+      }
     }
   })
 
