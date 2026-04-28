@@ -60,6 +60,10 @@ function SubmissionsViewer() {
     } else if (actualPlayer === predictedPlayer) {
       return { points: 3, type: 'pick' }
     } else if (firstRoundPlayers.includes(predictedPlayer)) {
+      const actualForPlayer = draftResults.find(r => r.player_name.toLowerCase() === predictedPlayer)
+      if (actualForPlayer && actualForPlayer.team_name.toLowerCase() === predictedTeam) {
+        return { points: 3, type: 'pick' }
+      }
       return { points: 1, type: 'firstRound' }
     } else {
       return { points: 0, type: 'none' }

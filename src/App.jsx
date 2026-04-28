@@ -203,8 +203,12 @@ function App() {
                 <span className="text-gray-300 text-sm">Correct player and pick number (wrong team)</span>
               </li>
               <li className="flex items-center gap-4">
+                <span className="text-blue-400 font-bold text-base w-14 text-right shrink-0">3 pts</span>
+                <span className="text-gray-300 text-sm">Correct player and team (wrong pick number)</span>
+              </li>
+              <li className="flex items-center gap-4">
                 <span className="text-gray-300 font-bold text-base w-14 text-right shrink-0">1 pt</span>
-                <span className="text-gray-300 text-sm">Player drafted in the first round (wrong position)</span>
+                <span className="text-gray-300 text-sm">Player drafted in the first round (wrong position and team)</span>
               </li>
               <li className="flex items-center gap-4">
                 <span className="text-green-400 font-bold text-base w-14 text-right shrink-0">2 pts</span>
